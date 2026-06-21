@@ -10,13 +10,16 @@ export async function POST(req, { params }) {
 
   const { data: split, error } = await db
     .from('deal_splits')
-    .select('*, deals(status)')
+    .select('*')
     .eq('accept_token', token)
     .single();
   if (error || !split) return NextResponse.json({ error: 'Invalid or expired link.' }, { status: 404 });
 
+  const { data: deal } = await db.from('deals').select('status').eq('id', split.deal_id).single();
+  if (!deal) return NextResponse.json({ error: 'Deal not found.' }, { status: 404 });
+
   // Can't accept terms after the deal is locked — acceptance must be on frozen terms.
-  if (split.deals.status !== 'draft') {
+  if (deal.status !== 'draft') {
     return NextResponse.json({ error: 'This deal is already locked and can no longer be changed.' }, { status: 409 });
   }
   if (split.agreed_at) {

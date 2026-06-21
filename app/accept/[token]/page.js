@@ -21,44 +21,58 @@ export default function AcceptPage() {
   const [resolvedName, setResolvedName] = useState('');
   const [done, setDone] = useState(false);
 
+  async function postJson(url, body) {
+    const opts = body
+      ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      : { method: 'POST' };
+    const res = await fetch(url, opts);
+    let json = {};
+    try { json = await res.json(); } catch { /* non-JSON response */ }
+    return { ok: res.ok, json };
+  }
+
   async function load() {
-    const res = await fetch(`/api/accept/${token}`);
-    const json = await res.json();
-    if (res.ok) setData(json); else setErr(json.error);
+    try {
+      const res = await fetch(`/api/accept/${token}`);
+      let json = {};
+      try { json = await res.json(); } catch {}
+      if (res.ok) setData(json); else setErr(json.error || 'Could not load this deal.');
+    } catch { setErr('Network error loading the deal. Please refresh.'); }
   }
   useEffect(() => { load(); }, [token]);
 
   async function accept() {
     setBusy(true); setErr('');
-    const res = await fetch(`/api/splits/${token}/accept`, { method: 'POST' });
-    const json = await res.json();
-    setBusy(false);
-    if (!res.ok) { setErr(json.error); return; }
-    load();
+    try {
+      const { ok, json } = await postJson(`/api/splits/${token}/accept`);
+      if (!ok) { setErr(json.error || 'Could not accept your share. Please try again.'); return; }
+      await load();
+    } catch { setErr('Network error. Please try again.'); }
+    finally { setBusy(false); }
   }
 
   async function resolveBank() {
     setBusy(true); setErr(''); setResolvedName('');
-    const res = await fetch('/api/onboard/flutterwave', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'resolve', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode }),
-    });
-    const json = await res.json();
-    setBusy(false);
-    if (!res.ok) { setErr(json.error); return; }
-    setResolvedName(json.account_name);
+    try {
+      const { ok, json } = await postJson('/api/onboard/flutterwave', {
+        action: 'resolve', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode,
+      });
+      if (!ok) { setErr(json.error || 'Could not check that account. Check the number and bank code.'); return; }
+      setResolvedName(json.account_name);
+    } catch { setErr('Network error. Please try again.'); }
+    finally { setBusy(false); }
   }
 
   async function confirmBank() {
     setBusy(true); setErr('');
-    const res = await fetch('/api/onboard/flutterwave', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'create', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode, business_name: resolvedName }),
-    });
-    const json = await res.json();
-    setBusy(false);
-    if (!res.ok) { setErr(json.error); return; }
-    setDone(true); load();
+    try {
+      const { ok, json } = await postJson('/api/onboard/flutterwave', {
+        action: 'create', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode, business_name: resolvedName,
+      });
+      if (!ok) { setErr(json.error || 'Could not save that account. Please try again.'); return; }
+      setDone(true); await load();
+    } catch { setErr('Network error. Please try again.'); }
+    finally { setBusy(false); }
   }
 
   if (err && !data) return <div className="wrap"><p className="err">{err}</p></div>;

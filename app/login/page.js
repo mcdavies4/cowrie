@@ -6,6 +6,7 @@ import { browserClient } from '../../lib/supabase-browser';
 function LoginInner() {
   const params = useSearchParams();
   const next = params.get('next') || '/deals/new';
+  const authError = params.get('error') === 'auth';
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState('');
@@ -27,6 +28,8 @@ function LoginInner() {
       <p className="eyebrow">Sign in</p>
       <h1 className="hero display" style={{ fontSize: 30 }}>Owner sign-in</h1>
       <p className="muted">You only need an account to create and manage deals. Collaborators don&apos;t — they accept by link.</p>
+
+      {authError && <p className="err">That sign-in link didn&apos;t work — it may have expired or already been used. Request a fresh one below.</p>}
 
       <div className="card">
         {sent ? (

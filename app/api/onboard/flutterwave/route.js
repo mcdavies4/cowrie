@@ -33,6 +33,7 @@ export async function POST(req) {
       account_bank,
       account_number,
       business_name: business_name || creator.name || creator.email,
+      business_email: creator.email,
     });
     await db
       .from('creators')
