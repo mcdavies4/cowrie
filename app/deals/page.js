@@ -20,7 +20,7 @@ export default function MyDeals() {
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    fetch('/api/deals').then(async (r) => {
+    fetch('/api/deals', { cache: 'no-store' }).then(async (r) => {
       const j = await r.json();
       if (r.ok) setData(j); else setErr(j.error);
     });

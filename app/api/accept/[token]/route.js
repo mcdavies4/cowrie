@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { serverClient } from '../../../../lib/supabase';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req, { params }) {
   const db = serverClient();

@@ -4,6 +4,7 @@ import { railForCurrency } from '../../../lib/money';
 import { sendEmail } from '../../../lib/email';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // List the signed-in owner's deals (newest first) with a collaborator count.
 export async function GET() {

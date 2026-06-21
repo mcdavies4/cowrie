@@ -18,7 +18,7 @@ export default function DealPage() {
   const [payUrl, setPayUrl] = useState('');
 
   async function load() {
-    const res = await fetch(`/api/deals/${id}`);
+    const res = await fetch(`/api/deals/${id}`, { cache: 'no-store' });
     const json = await res.json();
     if (res.ok) setData(json); else setErr(json.error);
   }

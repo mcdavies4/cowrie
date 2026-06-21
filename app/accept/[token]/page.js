@@ -33,7 +33,7 @@ export default function AcceptPage() {
 
   async function load() {
     try {
-      const res = await fetch(`/api/accept/${token}`);
+      const res = await fetch(`/api/accept/${token}`, { cache: 'no-store' });
       let json = {};
       try { json = await res.json(); } catch {}
       if (res.ok) setData(json); else setErr(json.error || 'Could not load this deal.');
