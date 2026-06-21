@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '../../../../lib/supabase';
 import { claimEvent, releaseEvent } from '../../../../lib/webhooks';
-import { sendSettlementEmail } from '../../../../lib/email';
+import { settleFlutterwaveDeal } from '../../../../lib/settle';
 
 export const runtime = 'nodejs';
 
@@ -15,32 +15,24 @@ export async function POST(req) {
   const payload = await req.json();
   const db = serverClient();
 
-  const eventKey = `flw_${payload.data?.id || payload.data?.tx_ref || payload['event.type'] || Date.now()}`;
+  const eventKey = `flw_${payload.data?.id || payload.data?.tx_ref || Date.now()}`;
   if (!(await claimEvent(db, eventKey))) {
     return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
-    // Successful charge -> the split already happened at settlement; record + mark distributed.
     if (payload.event === 'charge.completed' && payload.data?.status === 'successful') {
-      const dealId = payload.data?.meta?.deal_id || payload.meta?.deal_id;
+      // Find the deal id: prefer meta, fall back to parsing our tx_ref (cowrie_<dealId>_<ts>).
+      let dealId = payload.data?.meta?.deal_id || payload.meta?.deal_id;
+      const txRef = payload.data?.tx_ref;
+      if (!dealId && typeof txRef === 'string' && txRef.startsWith('cowrie_')) {
+        dealId = txRef.split('_')[1];
+      }
+
       if (dealId) {
         const { data: deal } = await db.from('deals').select('*').eq('id', dealId).single();
-        if (deal && deal.status !== 'distributed') {
-          await db.from('transactions').insert({
-            deal_id: dealId,
-            kind: 'payment_received',
-            amount_minor: deal.total_amount_minor,
-            provider_ref: payload.data?.tx_ref || payload.data?.flw_ref,
-          });
-
-          const { data: splits } = await db.from('deal_splits').select('*').eq('deal_id', dealId);
-          for (const s of splits) {
-            await db.from('deal_splits').update({ transfer_status: 'paid' }).eq('id', s.id);
-            await db.from('transactions').insert({ deal_id: dealId, kind: 'split_settled', amount_minor: s.amount_minor, provider_ref: payload.data?.tx_ref });
-          }
-          await db.from('deals').update({ status: 'distributed' }).eq('id', dealId);
-          await sendSettlementEmail(deal, splits.map((s) => ({ email: s.creator_email, amount_minor: s.amount_minor })));
+        if (deal) {
+          await settleFlutterwaveDeal(db, deal, txRef || payload.data?.flw_ref);
         }
       }
     }

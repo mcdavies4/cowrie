@@ -15,6 +15,7 @@ export default function DealPage() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [payUrl, setPayUrl] = useState('');
 
   async function load() {
@@ -23,6 +24,30 @@ export default function DealPage() {
     if (res.ok) setData(json); else setErr(json.error);
   }
   useEffect(() => { load(); }, [id]);
+
+  async function verifyPayment(silent) {
+    if (!silent) { setChecking(true); setErr(''); }
+    try {
+      const sp = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+      const transaction_id = sp.get('transaction_id') || null;
+      const res = await fetch(`/api/deals/${id}/verify`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction_id }), cache: 'no-store',
+      });
+      const json = await res.json().catch(() => ({}));
+      if (json.ok) { await load(); }
+      else if (!silent) { setErr(json.error || json.note || 'Payment not confirmed yet. If you just paid, wait a few seconds and check again.'); }
+    } catch { if (!silent) setErr('Could not check payment. Please try again.'); }
+    finally { if (!silent) setChecking(false); }
+  }
+
+  // When the payer is redirected back with ?paid=1, confirm with Flutterwave automatically.
+  useEffect(() => {
+    if (!data) return;
+    const paidFlag = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('paid') === '1';
+    if (paidFlag && data.deal.status !== 'distributed') { verifyPayment(true); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.deal?.id]);
 
   async function lock() {
     setBusy(true); setErr('');
@@ -102,13 +127,22 @@ export default function DealPage() {
         </div>
       )}
 
-      {(payUrl || deal.status === 'locked') && (
+      {(payUrl || deal.status === 'locked' || deal.status === 'paid') && deal.status !== 'distributed' && (
         <div className="card">
           <h2 className="display">Send this to the brand</h2>
-          <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>When they pay, each share settles automatically.</p>
+          <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>When they pay, each share settles automatically. Already paid? Check the status below.</p>
           {payUrl
             ? <a className="btn gold block" href={payUrl} target="_blank" rel="noreferrer">Open payment link</a>
             : <p className="muted" style={{ fontSize: 13 }}>Reload to fetch the link, or re-lock if it didn&apos;t generate.</p>}
+          <button className="btn ghost block" style={{ marginTop: 10 }} onClick={() => verifyPayment(false)} disabled={checking}>
+            {checking ? 'Checking…' : 'Check payment status'}
+          </button>
+        </div>
+      )}
+
+      {deal.status === 'distributed' && (
+        <div className="card">
+          <p className="ok" style={{ marginTop: 0 }}>✓ Paid and distributed. Each share has been routed to its account.</p>
         </div>
       )}
 
