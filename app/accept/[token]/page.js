@@ -1,0 +1,153 @@
+'use client';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+
+const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
+
+function money(minor, ccy) {
+  try { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: (ccy || 'gbp').toUpperCase() }).format(minor / 100); }
+  catch { return `${(minor / 100).toFixed(2)}`; }
+}
+
+export default function AcceptPage() {
+  const { token } = useParams();
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  // FLW bank form state
+  const [acctNo, setAcctNo] = useState('');
+  const [bankCode, setBankCode] = useState('');
+  const [resolvedName, setResolvedName] = useState('');
+  const [done, setDone] = useState(false);
+
+  async function load() {
+    const res = await fetch(`/api/accept/${token}`);
+    const json = await res.json();
+    if (res.ok) setData(json); else setErr(json.error);
+  }
+  useEffect(() => { load(); }, [token]);
+
+  async function accept() {
+    setBusy(true); setErr('');
+    const res = await fetch(`/api/splits/${token}/accept`, { method: 'POST' });
+    const json = await res.json();
+    setBusy(false);
+    if (!res.ok) { setErr(json.error); return; }
+    load();
+  }
+
+  async function resolveBank() {
+    setBusy(true); setErr(''); setResolvedName('');
+    const res = await fetch('/api/onboard/flutterwave', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'resolve', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode }),
+    });
+    const json = await res.json();
+    setBusy(false);
+    if (!res.ok) { setErr(json.error); return; }
+    setResolvedName(json.account_name);
+  }
+
+  async function confirmBank() {
+    setBusy(true); setErr('');
+    const res = await fetch('/api/onboard/flutterwave', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode, business_name: resolvedName }),
+    });
+    const json = await res.json();
+    setBusy(false);
+    if (!res.ok) { setErr(json.error); return; }
+    setDone(true); load();
+  }
+
+  if (err && !data) return <div className="wrap"><p className="err">{err}</p></div>;
+  if (!data) return <div className="wrap"><p className="muted">Loading…</p></div>;
+
+  const { deal, split, creator, all } = data;
+  const feePct = Number(deal.platform_fee_percent || 0);
+  const distributable = deal.total_amount_minor - Math.round((deal.total_amount_minor * feePct) / 100);
+  const myShareMinor = Math.round(distributable * (split.percent / 100));
+  const accepted = !!split.agreed_at;
+  const onboarded = creator?.onboarding_complete || done;
+
+  return (
+    <div className="wrap">
+      <div className="brand"><span className="dot" /><b>Cowrie</b></div>
+
+      <p className="eyebrow">You&apos;ve been added to a deal</p>
+      <h1 className="hero display" style={{ fontSize: 30 }}>{deal.title}</h1>
+      {deal.brand_name && <p className="muted" style={{ marginTop: 0 }}>From {deal.brand_name} · {money(deal.total_amount_minor, deal.currency)} total</p>}
+
+      <div className="card">
+        <p className="muted" style={{ fontSize: 13, margin: 0 }}>Your share</p>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          <span className="total" style={{ color: 'var(--gold)' }}>{split.percent}%</span>
+          <span className="mono" style={{ fontSize: 18 }}>{money(myShareMinor, deal.currency)}</span>
+        </div>
+        {feePct > 0 && <p className="muted" style={{ fontSize: 12, margin: '4px 0 0' }}>after {feePct}% platform fee</p>}
+        <div className="sharebar" style={{ marginTop: 14 }} aria-hidden>
+          {all.map((s, i) => <span key={i} style={{ width: `${s.percent}%`, background: s.creator_email === split.creator_email ? 'var(--gold)' : COLORS[(i % COLORS.length)] }} />)}
+        </div>
+        <div className="legend">
+          {all.map((s, i) => (
+            <div className="item" key={i}>
+              <span className="swatch" style={{ background: s.creator_email === split.creator_email ? 'var(--gold)' : COLORS[i % COLORS.length] }} />
+              <span className="who">{s.creator_email === split.creator_email ? `${s.creator_email} (you)` : s.creator_email}</span>
+              <span className="amt muted">{s.percent}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 1: accept */}
+      {!accepted && (
+        <>
+          <p className="muted" style={{ fontSize: 14 }}>Accepting confirms you agree to this {split.percent}% share. The terms can&apos;t be changed after you accept.</p>
+          <button className="btn block" onClick={accept} disabled={busy}>{busy ? 'Accepting…' : `Accept my ${split.percent}% share`}</button>
+        </>
+      )}
+
+      {/* Step 2: set up payout */}
+      {accepted && !onboarded && (
+        <div className="card">
+          <h2 className="display">Set up where your money lands</h2>
+          {deal.rail === 'stripe' ? (
+            <>
+              <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>You&apos;ll verify your identity and add a bank account with Stripe. Takes a couple of minutes.</p>
+              <a className="btn block" href={`/api/onboard/stripe?creator=${creator.id}`}>Set up payout with Stripe</a>
+            </>
+          ) : (
+            <>
+              <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>Enter your bank account. We&apos;ll check the name before saving.</p>
+              <label className="label">Account number</label>
+              <input className="mono" value={acctNo} onChange={(e) => setAcctNo(e.target.value)} placeholder="0690000037" inputMode="numeric" />
+              <label className="label">Bank code</label>
+              <input className="mono" value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="044 (Access Bank)" />
+              {!resolvedName
+                ? <button className="btn block" style={{ marginTop: 14 }} onClick={resolveBank} disabled={busy || !acctNo || !bankCode}>{busy ? 'Checking…' : 'Check account name'}</button>
+                : (
+                  <>
+                    <p className="ok">Account name: <strong>{resolvedName}</strong> — is this you?</p>
+                    <div className="row">
+                      <button className="btn ghost" onClick={() => setResolvedName('')}>No, edit</button>
+                      <button className="btn" onClick={confirmBank} disabled={busy}>{busy ? 'Saving…' : 'Yes, save'}</button>
+                    </div>
+                  </>
+                )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Done */}
+      {accepted && onboarded && (
+        <div className="card">
+          <p className="ok" style={{ marginTop: 0 }}>✓ You&apos;re all set. When the brand pays, your {money(myShareMinor, deal.currency)} lands automatically.</p>
+        </div>
+      )}
+
+      {err && <p className="err">{err}</p>}
+    </div>
+  );
+}
