@@ -42,7 +42,7 @@ export async function POST(req) {
       const dealId = event.data.object.metadata?.deal_id;
       if (dealId) {
         const { data: deal } = await db.from('deals').select('*').eq('id', dealId).single();
-        if (deal && deal.status !== 'distributed') {
+        if (deal && deal.status !== 'distributed' && deal.status !== 'cancelled') {
           await db.from('transactions').insert({
             deal_id: dealId,
             kind: 'payment_received',
@@ -60,14 +60,23 @@ export async function POST(req) {
 
           const provider = getProvider('stripe');
           const results = await provider.distribute(deal, enriched);
+          let allPaid = true;
           for (const r of results) {
-            await db.from('deal_splits').update({ transfer_id: r.transfer_id, transfer_status: 'paid' }).eq('id', r.split_id);
-            const split = enriched.find((s) => s.id === r.split_id);
-            await db.from('transactions').insert({ deal_id: dealId, kind: 'transfer_sent', amount_minor: split?.amount_minor, provider_ref: r.transfer_id });
-            if (split) await sendCollaboratorPaidEmail(deal, { email: split.creator_email, amount_minor: split.amount_minor });
+            if (r.status === 'paid') {
+              await db.from('deal_splits').update({ transfer_id: r.transfer_id, transfer_status: 'paid' }).eq('id', r.split_id);
+              const split = enriched.find((s) => s.id === r.split_id);
+              await db.from('transactions').insert({ deal_id: dealId, kind: 'transfer_sent', amount_minor: split?.amount_minor, provider_ref: r.transfer_id });
+              if (split) await sendCollaboratorPaidEmail(deal, { email: split.creator_email, amount_minor: split.amount_minor });
+            } else {
+              allPaid = false;
+            }
           }
-          await db.from('deals').update({ status: 'distributed' }).eq('id', dealId);
-          await sendSettlementEmail(deal, enriched.map((s) => ({ email: s.creator_email, amount_minor: s.amount_minor })));
+
+          if (allPaid) {
+            await db.from('deals').update({ status: 'distributed' }).eq('id', dealId);
+            await sendSettlementEmail(deal, enriched.map((s) => ({ email: s.creator_email, amount_minor: s.amount_minor })));
+          }
+          // If not allPaid, deal stays 'paid' so the owner can retry distribution once funds settle.
         }
       }
     }

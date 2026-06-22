@@ -1,7 +1,6 @@
 import Link from 'next/link';
 
 export default function Home() {
-  // Static demo split for the hero visual.
   const demo = [
     { who: 'You', pct: 50, color: 'var(--jade)' },
     { who: 'Ada', pct: 30, color: 'var(--gold)' },
@@ -10,23 +9,19 @@ export default function Home() {
 
   return (
     <div className="wrap">
-      <div className="brand">
-        <span className="dot" />
-        <b>Cowrie</b>
-      </div>
+      <div className="brand"><span className="dot" /><b>Cowrie</b></div>
 
       <p className="eyebrow">Revenue splits for collaborators</p>
       <h1 className="hero display">Split deals, not friendships.</h1>
       <p className="hero-sub">
         Agree the split up front. When the brand pays, everyone&apos;s share lands in their own account
-        automatically. No one has to wait for someone else to do the right thing.
+        automatically — your collaborator in Lagos gets paid in naira, instantly, no international wire.
+        No one has to trust the other to do the right thing.
       </p>
 
       <div className="card">
         <div className="sharebar" aria-hidden>
-          {demo.map((d) => (
-            <span key={d.who} style={{ width: `${d.pct}%`, background: d.color }} />
-          ))}
+          {demo.map((d) => (<span key={d.who} style={{ width: `${d.pct}%`, background: d.color }} />))}
         </div>
         <div className="legend">
           {demo.map((d) => (
@@ -45,6 +40,13 @@ export default function Home() {
       </div>
 
       <hr />
+      <p className="eyebrow">Why it&apos;s safe</p>
+      <div className="card">
+        <p style={{ marginTop: 0 }}><strong>Nobody can cheat the split.</strong> Once a deal is locked, the percentages are frozen — they can&apos;t be changed after anyone has accepted.</p>
+        <p><strong>Cowrie never holds your money.</strong> The payment goes straight to each person&apos;s account through regulated providers (Stripe and Flutterwave). We route it; we don&apos;t sit on it.</p>
+        <p style={{ marginBottom: 0 }}><strong>Everyone gets paid at once.</strong> One payment in, every share out — automatically, in each person&apos;s own currency. No chasing, no "I&apos;ll send it next week."</p>
+      </div>
+
       <p className="eyebrow">How it works</p>
       <ol className="steps">
         <li>You set the deal and each person&apos;s percentage.</li>
@@ -53,9 +55,13 @@ export default function Home() {
         <li>You lock the deal. Terms can&apos;t change after anyone has accepted.</li>
         <li>The brand pays once. Each share settles to each person automatically.</li>
       </ol>
-      <p className="muted" style={{ fontSize: 13, marginTop: 20 }}>
+
+      <hr />
+      <p className="muted" style={{ fontSize: 13 }}>
         Pounds, dollars and euros run on Stripe. Naira, cedis and other African currencies run on Flutterwave.
-        The deal&apos;s currency picks the rail.
+      </p>
+      <p className="muted" style={{ fontSize: 13 }}>
+        <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link> · A product of The 36th Company Ltd
       </p>
     </div>
   );

@@ -17,7 +17,32 @@ export default function DealPage() {
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [payUrl, setPayUrl] = useState('');
+
+  async function retryDistribution() {
+    setRetrying(true); setErr('');
+    try {
+      const res = await fetch(`/api/deals/${id}/retry-distribution`, { method: 'POST', cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (json.ok) { await load(); }
+      else { setErr(json.error || 'Funds may not have settled yet. In test mode, top up your Stripe available balance, then retry.'); }
+    } catch { setErr('Network error retrying distribution.'); }
+    finally { setRetrying(false); }
+  }
+
+  async function cancelDeal() {
+    if (typeof window !== 'undefined' && !window.confirm('Cancel this deal? Collaborators will no longer be paid through it.')) return;
+    setCancelling(true); setErr('');
+    try {
+      const res = await fetch(`/api/deals/${id}/cancel`, { method: 'POST', cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) { setErr(json.error || 'Could not cancel.'); return; }
+      await load();
+    } catch { setErr('Network error cancelling the deal.'); }
+    finally { setCancelling(false); }
+  }
 
   async function syncPayouts() {
     setSyncing(true); setErr('');
@@ -85,6 +110,7 @@ export default function DealPage() {
     locked: <span className="pill gold">Locked — awaiting payment</span>,
     paid: <span className="pill go">Paid — settling</span>,
     distributed: <span className="pill go">Distributed ✓</span>,
+    cancelled: <span className="pill">Cancelled</span>,
   }[deal.status];
 
   return (
@@ -183,6 +209,23 @@ export default function DealPage() {
           <button className="btn ghost block" style={{ marginTop: 10 }} onClick={() => verifyPayment(false)} disabled={checking}>
             {checking ? 'Checking…' : 'Check payment status'}
           </button>
+          {deal.status === 'paid' && deal.rail === 'stripe' && (
+            <button className="btn block" style={{ marginTop: 10 }} onClick={retryDistribution} disabled={retrying}>
+              {retrying ? 'Retrying…' : 'Retry distribution'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {(deal.status === 'draft' || deal.status === 'locked') && (
+        <button className="btn ghost block" style={{ marginTop: 4, color: 'var(--danger)', borderColor: 'var(--line)' }} onClick={cancelDeal} disabled={cancelling}>
+          {cancelling ? 'Cancelling…' : 'Cancel deal'}
+        </button>
+      )}
+
+      {deal.status === 'cancelled' && (
+        <div className="card">
+          <p className="muted" style={{ marginTop: 0 }}>This deal was cancelled. No payments will be processed through it.</p>
         </div>
       )}
 
