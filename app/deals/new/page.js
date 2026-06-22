@@ -2,6 +2,8 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { railForCurrency } from '../../../lib/money';
+import { processorRate } from '../../../lib/fees';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 const CURRENCIES = [
@@ -19,7 +21,7 @@ export default function NewDeal() {
   const [brand, setBrand] = useState('');
   const [currency, setCurrency] = useState('gbp');
   const [total, setTotal] = useState('');
-  const [fee, setFee] = useState('');
+  const [fee, setFee] = useState('7');
   const [splits, setSplits] = useState([{ email: '', percent: '' }]);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -79,6 +81,15 @@ export default function NewDeal() {
 
         <label className="label">Platform fee % (optional — what you keep)</label>
         <input className="mono" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" inputMode="decimal" />
+        {(() => {
+          const rail = railForCurrency(currency);
+          const r = processorRate(rail);
+          return (
+            <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
+              {rail === 'stripe' ? 'Stripe' : 'Flutterwave'} takes about {r.pct}%{r.fixed_minor ? ' + a small fixed fee' : ''} per payment. Keep your fee above that to stay profitable.
+            </p>
+          );
+        })()}
       </div>
 
       <div className="card">

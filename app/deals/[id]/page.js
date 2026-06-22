@@ -125,6 +125,32 @@ export default function DealPage() {
           </p>
         )}
       </div>
+
+      {data.breakdown && (
+        <div className="card">
+          <h2 className="display" style={{ fontSize: 18 }}>Money breakdown</h2>
+          <div className="legend" style={{ marginTop: 12 }}>
+            <div className="item"><span className="who">Brand pays (gross)</span><span className="amt mono">{money(data.breakdown.gross, deal.currency)}</span></div>
+            <div className="item"><span className="who muted">Est. {deal.rail === 'stripe' ? 'Stripe' : 'Flutterwave'} fee</span><span className="amt mono muted">−{money(data.breakdown.processor_minor, deal.currency)}</span></div>
+            <div className="item"><span className="who">Your platform fee</span><span className="amt mono">{money(data.breakdown.platform_fee_minor, deal.currency)}</span></div>
+            <div className="item" style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}>
+              <span className="who" style={{ color: data.breakdown.you_keep_minor >= 0 ? 'var(--jade)' : 'var(--danger)' }}>
+                You keep (after fee)
+              </span>
+              <span className="amt mono" style={{ color: data.breakdown.you_keep_minor >= 0 ? 'var(--jade)' : 'var(--danger)' }}>
+                {money(data.breakdown.you_keep_minor, deal.currency)}
+              </span>
+            </div>
+            <div className="item"><span className="who">Collaborators split</span><span className="amt mono">{money(data.breakdown.net_to_collaborators, deal.currency)}</span></div>
+          </div>
+          {data.breakdown.you_keep_minor < 0 && (
+            <p className="err" style={{ marginTop: 10 }}>
+              Your platform fee is below the estimated processor fee — you&apos;d lose money on this deal. Raise the fee when you create the next one.
+            </p>
+          )}
+          <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>Processor fee is an estimate; actual varies by card and country.</p>
+        </div>
+      )}
       {isDraft && (
         <div className="card">
           <h2 className="display">Before you lock</h2>
