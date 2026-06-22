@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../../lib/supabase';
+import { payoutFor } from '../../../../lib/payouts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,16 +17,15 @@ export async function GET(req, { params }) {
 
   const { data: splits } = await db.from('deal_splits').select('*').eq('deal_id', params.id).order('percent', { ascending: false });
 
-  // Attach each collaborator's onboarding status + (dev only) their accept link.
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   const enriched = [];
   for (const s of splits) {
-    const { data: creator } = await db.from('creators').select('onboarding_complete, provider, payout_label').eq('email', s.creator_email).single();
+    const { data: creator } = await db.from('creators').select('*').eq('email', s.creator_email).single();
+    const p = payoutFor(creator, deal.rail);
     enriched.push({
       ...s,
-      onboarding_complete: creator?.onboarding_complete || false,
-      provider: creator?.provider || null,
-      payout_label: creator?.payout_label || null,
+      onboarding_complete: p.onboarded,
+      payout_label: p.label,
       accept_link: `${appUrl}/accept/${s.accept_token}`,
     });
   }

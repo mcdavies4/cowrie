@@ -32,8 +32,8 @@ export async function POST(req) {
       if (acct.payouts_enabled && acct.charges_enabled) {
         await db
           .from('creators')
-          .update({ onboarding_complete: true, payout_label: 'Stripe payout account' })
-          .eq('provider_account_id', acct.id);
+          .update({ stripe_onboarded: true })
+          .eq('stripe_account_id', acct.id);
       }
     }
 
@@ -54,8 +54,8 @@ export async function POST(req) {
           const { data: splits } = await db.from('deal_splits').select('*').eq('deal_id', dealId);
           const enriched = [];
           for (const s of splits) {
-            const { data: creator } = await db.from('creators').select('provider_account_id').eq('email', s.creator_email).single();
-            enriched.push({ ...s, provider_account_id: creator?.provider_account_id });
+            const { data: creator } = await db.from('creators').select('stripe_account_id').eq('email', s.creator_email).single();
+            enriched.push({ ...s, provider_account_id: creator?.stripe_account_id });
           }
 
           const provider = getProvider('stripe');

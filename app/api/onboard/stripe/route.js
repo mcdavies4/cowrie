@@ -18,7 +18,7 @@ export async function GET(req) {
 
   await db
     .from('creators')
-    .update({ provider: 'stripe', provider_account_id: providerAccountId })
+    .update({ stripe_account_id: providerAccountId })
     .eq('id', creator.id);
 
   return NextResponse.redirect(url);

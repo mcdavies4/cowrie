@@ -83,7 +83,7 @@ export default function AcceptPage() {
   const distributable = deal.total_amount_minor - Math.round((deal.total_amount_minor * feePct) / 100);
   const myShareMinor = Math.round(distributable * (split.percent / 100));
   const accepted = !!split.agreed_at;
-  const onboarded = creator?.onboarding_complete || done;
+  const onboarded = data.onboarded || done;
 
   return (
     <div className="wrap">

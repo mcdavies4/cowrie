@@ -37,7 +37,7 @@ export async function POST(req) {
     });
     await db
       .from('creators')
-      .update({ provider: 'flutterwave', provider_account_id: providerAccountId, payout_label: label, onboarding_complete: true })
+      .update({ flw_subaccount_id: providerAccountId, flw_label: label, flw_onboarded: true })
       .eq('id', creator.id);
     return NextResponse.json({ ok: true, payout_label: label });
   } catch (e) {

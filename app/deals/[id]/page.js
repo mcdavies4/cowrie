@@ -120,7 +120,7 @@ export default function DealPage() {
             Locking freezes the terms — they can&apos;t change after anyone has accepted. Everyone must accept and set up their payout first.
           </p>
           <p style={{ fontSize: 14 }}>{allAccepted ? '✓ Everyone accepted' : '○ Waiting on acceptances'}</p>
-          <p style={{ fontSize: 14, marginTop: 4 }}>{allOnboarded ? '✓ Everyone&apos;s payout is set' : '○ Waiting on payout setup'}</p>
+          <p style={{ fontSize: 14, marginTop: 4 }}>{allOnboarded ? "✓ Everyone's payout is set" : '○ Waiting on payout setup'}</p>
           <button className="btn block" style={{ marginTop: 12 }} onClick={lock} disabled={busy || !allAccepted || !allOnboarded}>
             {busy ? 'Locking…' : 'Lock deal & create payment link'}
           </button>

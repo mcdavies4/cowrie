@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../../../lib/supabase';
 import { allocate } from '../../../../../lib/money';
 import { getProvider } from '../../../../../lib/providers';
+import { payoutFor } from '../../../../../lib/payouts';
 
 export const runtime = 'nodejs';
 
@@ -32,20 +33,18 @@ export async function POST(req, { params }) {
     );
   }
 
-  // 2) Pull each collaborator's payout destination and check the rail matches.
+  // 2) Pull each collaborator's payout destination for THIS deal's rail.
   const enriched = [];
   for (const s of splits) {
     const { data: creator } = await db.from('creators').select('*').eq('email', s.creator_email).single();
-    if (!creator || !creator.onboarding_complete) {
-      return NextResponse.json({ error: `${s.creator_email} hasn't set up where their money lands yet.` }, { status: 409 });
-    }
-    if (creator.provider !== deal.rail) {
+    const p = payoutFor(creator, deal.rail);
+    if (!p.onboarded || !p.accountId) {
       return NextResponse.json(
-        { error: `${s.creator_email} is set up on ${creator.provider}, but this deal pays via ${deal.rail}.` },
+        { error: `${s.creator_email} hasn't set up a ${deal.rail === 'stripe' ? 'Stripe' : 'bank'} payout for this currency yet.` },
         { status: 409 }
       );
     }
-    enriched.push({ ...s, provider_account_id: creator.provider_account_id });
+    enriched.push({ ...s, provider_account_id: p.accountId });
   }
 
   // 3) Freeze exact amounts. The platform fee comes off the top; collaborators split
