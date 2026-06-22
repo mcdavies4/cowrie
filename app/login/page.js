@@ -1,6 +1,7 @@
 'use client';
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { browserClient } from '../../lib/supabase-browser';
 
 function LoginInner() {
@@ -24,7 +25,7 @@ function LoginInner() {
 
   return (
     <div className="wrap">
-      <div className="brand"><span className="dot" /><b>Cowrie</b></div>
+      <div className="brand"><Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link></div>
       <p className="eyebrow">Sign in</p>
       <h1 className="hero display" style={{ fontSize: 30 }}>Owner sign-in</h1>
       <p className="muted">You only need an account to create and manage deals. Collaborators don&apos;t — they accept by link.</p>

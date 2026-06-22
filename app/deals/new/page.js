@@ -51,7 +51,10 @@ export default function NewDeal() {
 
   return (
     <div className="wrap">
-      <div className="brand"><Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link></div>
+      <div className="brand" style={{ justifyContent: 'space-between' }}>
+        <Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link>
+        <Link href="/deals" className="muted" style={{ fontSize: 14 }}>← All deals</Link>
+      </div>
       <p className="eyebrow">New deal</p>
       <h1 className="hero display" style={{ fontSize: 32 }}>Set the terms</h1>
 

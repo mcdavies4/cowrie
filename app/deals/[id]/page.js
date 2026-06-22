@@ -89,7 +89,10 @@ export default function DealPage() {
 
   return (
     <div className="wrap">
-      <div className="brand"><Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link></div>
+      <div className="brand" style={{ justifyContent: 'space-between' }}>
+        <Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link>
+        <Link href="/deals" className="muted" style={{ fontSize: 14 }}>← All deals</Link>
+      </div>
 
       <p className="eyebrow">{deal.rail === 'stripe' ? 'Stripe rail' : 'Flutterwave rail'} · {deal.currency.toUpperCase()}</p>
       <h1 className="hero display" style={{ fontSize: 30 }}>{deal.title}</h1>

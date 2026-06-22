@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 
@@ -98,7 +99,7 @@ export default function AcceptPage() {
 
   return (
     <div className="wrap">
-      <div className="brand"><span className="dot" /><b>Cowrie</b></div>
+      <div className="brand"><Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link></div>
 
       <p className="eyebrow">You&apos;ve been added to a deal</p>
       <h1 className="hero display" style={{ fontSize: 30 }}>{deal.title}</h1>
@@ -169,6 +170,7 @@ export default function AcceptPage() {
       {accepted && onboarded && (
         <div className="card">
           <p className="ok" style={{ marginTop: 0 }}>✓ You&apos;re all set. When the brand pays, your {money(myShareMinor, deal.currency)} lands automatically.</p>
+          <Link className="btn ghost block" href="/" style={{ marginTop: 12 }}>Done</Link>
         </div>
       )}
 
