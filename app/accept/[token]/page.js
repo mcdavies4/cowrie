@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { computePlatformFee } from '../../../lib/fees';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 
@@ -92,7 +93,8 @@ export default function AcceptPage() {
 
   const { deal, split, creator, all } = data;
   const feePct = Number(deal.platform_fee_percent || 0);
-  const distributable = deal.total_amount_minor - Math.round((deal.total_amount_minor * feePct) / 100);
+  const feeMinor = computePlatformFee(deal.total_amount_minor, feePct, deal.platform_fee_cap_minor);
+  const distributable = deal.total_amount_minor - feeMinor;
   const myShareMinor = Math.round(distributable * (split.percent / 100));
   const accepted = !!split.agreed_at;
   const onboarded = data.onboarded || done;

@@ -150,7 +150,7 @@ export default function DealPage() {
         </div>
         {deal.platform_fee_percent > 0 && (
           <p className="muted" style={{ fontSize: 13, marginTop: 12 }}>
-            Platform fee: {deal.platform_fee_percent}%{deal.fee_minor ? ` · ${money(deal.fee_minor, deal.currency)}` : ''} — kept by you, off the top.
+            Cowrie fee: {deal.platform_fee_percent}%{deal.platform_fee_cap_minor ? ` capped at ${money(deal.platform_fee_cap_minor, deal.currency)}` : ''}{deal.fee_minor ? ` · ${money(deal.fee_minor, deal.currency)}` : ''} — taken off the top before the split.
           </p>
         )}
       </div>
@@ -161,10 +161,10 @@ export default function DealPage() {
           <div className="legend" style={{ marginTop: 12 }}>
             <div className="item"><span className="who">Brand pays (gross)</span><span className="amt mono">{money(data.breakdown.gross, deal.currency)}</span></div>
             <div className="item"><span className="who muted">Est. {deal.rail === 'stripe' ? 'Stripe' : 'Flutterwave'} fee</span><span className="amt mono muted">−{money(data.breakdown.processor_minor, deal.currency)}</span></div>
-            <div className="item"><span className="who">Your platform fee</span><span className="amt mono">{money(data.breakdown.platform_fee_minor, deal.currency)}</span></div>
+            <div className="item"><span className="who">Cowrie fee</span><span className="amt mono">{money(data.breakdown.platform_fee_minor, deal.currency)}</span></div>
             <div className="item" style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}>
               <span className="who" style={{ color: data.breakdown.you_keep_minor >= 0 ? 'var(--jade)' : 'var(--danger)' }}>
-                You keep (after fee)
+                Cowrie keeps (after processor)
               </span>
               <span className="amt mono" style={{ color: data.breakdown.you_keep_minor >= 0 ? 'var(--jade)' : 'var(--danger)' }}>
                 {money(data.breakdown.you_keep_minor, deal.currency)}
@@ -174,7 +174,7 @@ export default function DealPage() {
           </div>
           {data.breakdown.you_keep_minor < 0 && (
             <p className="err" style={{ marginTop: 10 }}>
-              Your platform fee is below the estimated processor fee — you&apos;d lose money on this deal. Raise the fee when you create the next one.
+              On this deal Cowrie&apos;s fee is below the processor&apos;s cut — Cowrie would lose money here. The fee settings need adjusting.
             </p>
           )}
           <p className="muted" style={{ fontSize: 12, marginTop: 10 }}>Processor fee is an estimate; actual varies by card and country.</p>

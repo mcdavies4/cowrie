@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../lib/supabase';
 import { railForCurrency } from '../../../lib/money';
+import { platformFee } from '../../../lib/platform-fee';
 import { sendEmail } from '../../../lib/email';
 
 export const runtime = 'nodejs';
@@ -37,7 +38,7 @@ export async function POST(req) {
   if (!user) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
 
   const body = await req.json();
-  const { title, brand_name, currency, total, splits, platform_fee_percent } = body;
+  const { title, brand_name, currency, total, splits } = body;
 
   if (!title || !currency || !total || !Array.isArray(splits) || splits.length === 0) {
     return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
@@ -54,9 +55,7 @@ export async function POST(req) {
   }
 
   const total_amount_minor = Math.round(parseFloat(total) * 100);
-  const feePct = platform_fee_percent != null && platform_fee_percent !== ''
-    ? Number(platform_fee_percent)
-    : Number(process.env.PLATFORM_FEE_PERCENT || 0);
+  const { percent: feePct, capMinor: feeCapMinor } = platformFee(currency);
 
   const db = serverClient();
 
@@ -69,6 +68,7 @@ export async function POST(req) {
       rail,
       total_amount_minor,
       platform_fee_percent: feePct,
+      platform_fee_cap_minor: feeCapMinor,
       created_by_email: user.email,
     })
     .select()

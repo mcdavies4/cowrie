@@ -3,7 +3,8 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { railForCurrency } from '../../../lib/money';
-import { processorRate } from '../../../lib/fees';
+import { computePlatformFee } from '../../../lib/fees';
+import { platformFee } from '../../../lib/platform-fee';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 const CURRENCIES = [
@@ -21,7 +22,6 @@ export default function NewDeal() {
   const [brand, setBrand] = useState('');
   const [currency, setCurrency] = useState('gbp');
   const [total, setTotal] = useState('');
-  const [fee, setFee] = useState('7');
   const [splits, setSplits] = useState([{ email: '', percent: '' }]);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
@@ -41,7 +41,7 @@ export default function NewDeal() {
     const res = await fetch('/api/deals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, brand_name: brand, currency, total, platform_fee_percent: fee, splits }),
+      body: JSON.stringify({ title, brand_name: brand, currency, total, splits }),
     });
     const data = await res.json();
     setBusy(false);
@@ -82,15 +82,24 @@ export default function NewDeal() {
           </div>
         </div>
 
-        <label className="label">Platform fee % (optional — what you keep)</label>
-        <input className="mono" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="0" inputMode="decimal" />
+        <label className="label">Cowrie fee (set by Cowrie)</label>
         {(() => {
-          const rail = railForCurrency(currency);
-          const r = processorRate(rail);
+          const { percent, capMinor } = platformFee(currency);
+          const totalMinor = Math.round((parseFloat(total) || 0) * 100);
+          const feeMinor = computePlatformFee(totalMinor, percent, capMinor);
+          const fmt = (m) => `${currency.toUpperCase()} ${(m / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           return (
-            <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-              {rail === 'stripe' ? 'Stripe' : 'Flutterwave'} takes about {r.pct}%{r.fixed_minor ? ' + a small fixed fee' : ''} per payment. Keep your fee above that to stay profitable.
-            </p>
+            <div className="card" style={{ margin: '6px 0 0', padding: 14 }}>
+              <p className="mono" style={{ margin: 0, fontSize: 15 }}>
+                {percent}%{capMinor ? ` · max ${fmt(capMinor)}` : ''}
+              </p>
+              {totalMinor > 0 && (
+                <p className="muted" style={{ fontSize: 13, margin: '6px 0 0' }}>
+                  Fee on this deal: <span className="mono" style={{ color: 'var(--gold)' }}>{fmt(feeMinor)}</span>
+                  {capMinor && feeMinor === capMinor ? ' (capped)' : ''} · collaborators split <span className="mono">{fmt(totalMinor - feeMinor)}</span>
+                </p>
+              )}
+            </div>
           );
         })()}
       </div>

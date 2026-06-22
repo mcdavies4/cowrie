@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../../../lib/supabase';
 import { allocate } from '../../../../../lib/money';
+import { computePlatformFee } from '../../../../../lib/fees';
 import { getProvider } from '../../../../../lib/providers';
 import { payoutFor } from '../../../../../lib/payouts';
 
@@ -50,8 +51,7 @@ export async function POST(req, { params }) {
   // 3) Freeze exact amounts. The platform fee comes off the top; collaborators split
   //    the remainder by their percentages (so a 40% share is 40% of the net).
   //    Largest-remainder ensures the parts sum exactly to the distributable amount.
-  const feePct = Number(deal.platform_fee_percent || 0);
-  const fee_minor = Math.round((deal.total_amount_minor * feePct) / 100);
+  const fee_minor = computePlatformFee(deal.total_amount_minor, deal.platform_fee_percent, deal.platform_fee_cap_minor);
   const distributable = deal.total_amount_minor - fee_minor;
 
   const amounts = allocate(distributable, enriched.map((s) => ({ id: s.id, percent: s.percent })));

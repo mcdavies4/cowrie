@@ -10,7 +10,7 @@ export async function GET(req, { params }) {
   const { data: split } = await db.from('deal_splits').select('*').eq('accept_token', params.token).single();
   if (!split) return NextResponse.json({ error: 'Invalid or expired link.' }, { status: 404 });
 
-  const { data: deal } = await db.from('deals').select('id,title,brand_name,currency,rail,total_amount_minor,platform_fee_percent,status').eq('id', split.deal_id).single();
+  const { data: deal } = await db.from('deals').select('id,title,brand_name,currency,rail,total_amount_minor,platform_fee_percent,platform_fee_cap_minor,status').eq('id', split.deal_id).single();
   const { data: creator } = await db.from('creators').select('*').eq('email', split.creator_email).single();
   const { data: all } = await db.from('deal_splits').select('creator_email,percent').eq('deal_id', split.deal_id).order('percent', { ascending: false });
 

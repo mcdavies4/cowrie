@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../../lib/supabase';
 import { payoutFor } from '../../../../lib/payouts';
-import { estimateProcessorFee } from '../../../../lib/fees';
+import { estimateProcessorFee, computePlatformFee } from '../../../../lib/fees';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,7 +32,7 @@ export async function GET(req, { params }) {
   }
 
   const gross = deal.total_amount_minor;
-  const platform_fee_minor = deal.fee_minor || Math.round((gross * (deal.platform_fee_percent || 0)) / 100);
+  const platform_fee_minor = deal.fee_minor || computePlatformFee(gross, deal.platform_fee_percent, deal.platform_fee_cap_minor);
   const processor_minor = estimateProcessorFee(gross, deal.rail);
   const net_to_collaborators = gross - platform_fee_minor;
   const you_keep_minor = platform_fee_minor - processor_minor;
