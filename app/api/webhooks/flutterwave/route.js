@@ -15,11 +15,7 @@ export async function POST(req) {
   const payload = await req.json();
   const db = serverClient();
 
-  const rawKey = payload.data?.id || payload.data?.tx_ref;
-  if (!rawKey) {
-    return NextResponse.json({ error: 'Missing event identifier.' }, { status: 400 });
-  }
-  const eventKey = `flw_${rawKey}`;
+  const eventKey = `flw_${payload.data?.id || payload.data?.tx_ref || Date.now()}`;
   if (!(await claimEvent(db, eventKey))) {
     return NextResponse.json({ received: true, duplicate: true });
   }

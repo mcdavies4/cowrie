@@ -7,7 +7,7 @@ export default function Privacy() {
     <div className="wrap">
       <div className="brand"><Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link></div>
       <h1 className="hero display" style={{ fontSize: 30 }}>Privacy Policy</h1>
-      <p className="muted" style={{ fontSize: 13 }}>Last updated: 22 June 2026. This is a starting template — have it reviewed before relying on it. The 36th Company Ltd is the data controller.</p>
+      <p className="muted" style={{ fontSize: 13 }}>Last updated: [DATE]. This is a starting template — have it reviewed before relying on it. The 36th Company Ltd is the data controller.</p>
 
       <div className="card">
         <p><strong>What we collect.</strong> Account email addresses; deal details (titles, amounts, splits); collaborator email addresses and payout identifiers. Bank and identity details for payouts are collected and held by our payment providers (Stripe, Flutterwave), not by Cowrie.</p>
@@ -24,7 +24,7 @@ export default function Privacy() {
 
         <p><strong>Security.</strong> We use access controls and encryption in transit, and rely on our providers&apos; security for sensitive payment data. No system is perfectly secure.</p>
 
-        <p><strong>Contact.</strong> support@cowrie.app.</p>
+        <p><strong>Contact.</strong> [your support email].</p>
       </div>
 
       <p className="muted" style={{ fontSize: 13 }}><Link href="/terms">Terms of Service</Link> · <Link href="/">Home</Link></p>

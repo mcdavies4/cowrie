@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { serverClient, currentUser } from '../../../../../lib/supabase';
+import { serverClient } from '../../../../../lib/supabase';
 import { settleFlutterwaveDeal } from '../../../../../lib/settle';
-import { toMajor } from '../../../../../lib/money';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,18 +9,12 @@ export const dynamic = 'force-dynamic';
 // webhook never arrives. Verifies by transaction_id (from the redirect) or, failing
 // that, by the deal's stored tx_ref.
 export async function POST(req, { params }) {
-  const user = await currentUser();
-  if (!user) return NextResponse.json({ error: 'Please sign in.' }, { status: 401 });
-
   const body = await req.json().catch(() => ({}));
   const transaction_id = body.transaction_id || null;
 
   const db = serverClient();
   const { data: deal } = await db.from('deals').select('*').eq('id', params.id).single();
   if (!deal) return NextResponse.json({ error: 'Deal not found.' }, { status: 404 });
-  if (deal.created_by_email !== user.email) {
-    return NextResponse.json({ error: 'Not authorized.' }, { status: 403 });
-  }
   if (deal.status === 'distributed') return NextResponse.json({ ok: true, status: 'distributed' });
 
   if (deal.rail !== 'flutterwave') {
@@ -50,7 +43,7 @@ export async function POST(req, { params }) {
   const paid =
     json?.status === 'success' &&
     d?.status === 'successful' &&
-    Number(d?.amount) >= toMajor(deal.total_amount_minor, deal.currency) &&
+    Number(d?.amount) >= deal.total_amount_minor / 100 &&
     String(d?.currency || '').toLowerCase() === deal.currency;
 
   if (!paid) {

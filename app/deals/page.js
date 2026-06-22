@@ -2,12 +2,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { browserClient } from '../../lib/supabase-browser';
-import { toMajor } from '../../lib/money';
 
 function money(minor, ccy) {
-  const major = toMajor(minor, ccy);
-  try { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: (ccy || 'gbp').toUpperCase() }).format(major); }
-  catch { return `${major.toFixed(2)} ${(ccy || '').toUpperCase()}`; }
+  try { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: (ccy || 'gbp').toUpperCase() }).format(minor / 100); }
+  catch { return `${(minor / 100).toFixed(2)} ${(ccy || '').toUpperCase()}`; }
 }
 
 const STATUS = {
@@ -15,7 +13,6 @@ const STATUS = {
   locked: { label: 'Awaiting payment', cls: 'pill gold' },
   paid: { label: 'Settling', cls: 'pill go' },
   distributed: { label: 'Distributed', cls: 'pill go' },
-  cancelled: { label: 'Cancelled', cls: 'pill' },
 };
 
 export default function MyDeals() {

@@ -1,0 +1,21 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shell" x1="0.15" y1="0.05" x2="0.85" y2="0.95">
+      <stop offset="0" stop-color="#f7f0e2"/>
+      <stop offset="0.5" stop-color="#efe6d6"/>
+      <stop offset="1" stop-color="#e3ad3c"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#16131d"/>
+  <g transform="rotate(-16 32 32)">
+    <ellipse cx="32" cy="32" rx="16" ry="20" fill="url(#shell)"/>
+    <path d="M32 15 C33.2 23 33.2 41 32 49 C30.8 41 30.8 23 32 15 Z" fill="#16131d"/>
+    <g stroke="#16131d" stroke-width="1.5" stroke-linecap="round">
+      <line x1="28.8" y1="22" x2="35.2" y2="22"/>
+      <line x1="28.3" y1="27" x2="35.7" y2="27"/>
+      <line x1="28.2" y1="32" x2="35.8" y2="32"/>
+      <line x1="28.3" y1="37" x2="35.7" y2="37"/>
+      <line x1="28.8" y1="42" x2="35.2" y2="42"/>
+    </g>
+  </g>
+</svg>
