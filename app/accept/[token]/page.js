@@ -75,6 +75,17 @@ export default function AcceptPage() {
     finally { setBusy(false); }
   }
 
+  async function startStripe() {
+    setBusy(true); setErr('');
+    try {
+      const res = await fetch(`/api/onboard/stripe?creator=${data.creator.id}`, { cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.url) { setErr(json.error || 'Could not start Stripe setup.'); return; }
+      window.location.href = json.url;
+    } catch { setErr('Network error starting Stripe setup.'); }
+    finally { setBusy(false); }
+  }
+
   if (err && !data) return <div className="wrap"><p className="err">{err}</p></div>;
   if (!data) return <div className="wrap"><p className="muted">Loading…</p></div>;
 
@@ -129,7 +140,7 @@ export default function AcceptPage() {
           {deal.rail === 'stripe' ? (
             <>
               <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>You&apos;ll verify your identity and add a bank account with Stripe. Takes a couple of minutes.</p>
-              <a className="btn block" href={`/api/onboard/stripe?creator=${creator.id}`}>Set up payout with Stripe</a>
+              <button className="btn block" onClick={startStripe} disabled={busy}>{busy ? 'Starting…' : 'Set up payout with Stripe'}</button>
             </>
           ) : (
             <>

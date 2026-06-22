@@ -13,13 +13,15 @@ export async function GET(req) {
   const { data: creator, error } = await db.from('creators').select('*').eq('id', creatorId).single();
   if (error || !creator) return NextResponse.json({ error: 'Creator not found.' }, { status: 404 });
 
-  const stripe = getProvider('stripe');
-  const { url, providerAccountId } = await stripe.onboardStart(creator);
-
-  await db
-    .from('creators')
-    .update({ stripe_account_id: providerAccountId })
-    .eq('id', creator.id);
-
-  return NextResponse.redirect(url);
+  try {
+    const stripe = getProvider('stripe');
+    const { url, providerAccountId } = await stripe.onboardStart(creator);
+    await db
+      .from('creators')
+      .update({ stripe_account_id: providerAccountId })
+      .eq('id', creator.id);
+    return NextResponse.json({ url });
+  } catch (e) {
+    return NextResponse.json({ error: `Stripe setup failed: ${e.message}` }, { status: 502 });
+  }
 }
