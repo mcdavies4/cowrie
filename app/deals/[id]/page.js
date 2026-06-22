@@ -16,7 +16,19 @@ export default function DealPage() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [payUrl, setPayUrl] = useState('');
+
+  async function syncPayouts() {
+    setSyncing(true); setErr('');
+    try {
+      const res = await fetch(`/api/deals/${id}/sync-payouts`, { method: 'POST', cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) { setErr(json.error || 'Could not refresh payout status.'); return; }
+      await load();
+    } catch { setErr('Network error refreshing payout status.'); }
+    finally { setSyncing(false); }
+  }
 
   async function load() {
     const res = await fetch(`/api/deals/${id}`, { cache: 'no-store' });
@@ -121,6 +133,11 @@ export default function DealPage() {
           </p>
           <p style={{ fontSize: 14 }}>{allAccepted ? '✓ Everyone accepted' : '○ Waiting on acceptances'}</p>
           <p style={{ fontSize: 14, marginTop: 4 }}>{allOnboarded ? "✓ Everyone's payout is set" : '○ Waiting on payout setup'}</p>
+          {!allOnboarded && deal.rail === 'stripe' && (
+            <button className="btn ghost block" style={{ marginTop: 8 }} onClick={syncPayouts} disabled={syncing}>
+              {syncing ? 'Checking Stripe…' : 'Refresh payout status'}
+            </button>
+          )}
           <button className="btn block" style={{ marginTop: 12 }} onClick={lock} disabled={busy || !allAccepted || !allOnboarded}>
             {busy ? 'Locking…' : 'Lock deal & create payment link'}
           </button>
