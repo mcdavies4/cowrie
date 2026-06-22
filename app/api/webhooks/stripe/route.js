@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { serverClient } from '../../../../lib/supabase';
 import { getProvider } from '../../../../lib/providers';
 import { claimEvent, releaseEvent } from '../../../../lib/webhooks';
-import { sendSettlementEmail } from '../../../../lib/email';
+import { sendSettlementEmail, sendCollaboratorPaidEmail } from '../../../../lib/email';
 
 export const runtime = 'nodejs';
 
@@ -62,8 +62,9 @@ export async function POST(req) {
           const results = await provider.distribute(deal, enriched);
           for (const r of results) {
             await db.from('deal_splits').update({ transfer_id: r.transfer_id, transfer_status: 'paid' }).eq('id', r.split_id);
-            const amt = enriched.find((s) => s.id === r.split_id)?.amount_minor;
-            await db.from('transactions').insert({ deal_id: dealId, kind: 'transfer_sent', amount_minor: amt, provider_ref: r.transfer_id });
+            const split = enriched.find((s) => s.id === r.split_id);
+            await db.from('transactions').insert({ deal_id: dealId, kind: 'transfer_sent', amount_minor: split?.amount_minor, provider_ref: r.transfer_id });
+            if (split) await sendCollaboratorPaidEmail(deal, { email: split.creator_email, amount_minor: split.amount_minor });
           }
           await db.from('deals').update({ status: 'distributed' }).eq('id', dealId);
           await sendSettlementEmail(deal, enriched.map((s) => ({ email: s.creator_email, amount_minor: s.amount_minor })));
