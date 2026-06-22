@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { computePlatformFee } from '../../../lib/fees';
+import { allocate, toMajor } from '../../../lib/money';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 
 function money(minor, ccy) {
-  try { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: (ccy || 'gbp').toUpperCase() }).format(minor / 100); }
-  catch { return `${(minor / 100).toFixed(2)}`; }
+  const major = toMajor(minor, ccy);
+  try { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: (ccy || 'gbp').toUpperCase() }).format(major); }
+  catch { return `${major.toFixed(2)}`; }
 }
 
 export default function AcceptPage() {
@@ -57,7 +59,7 @@ export default function AcceptPage() {
     setBusy(true); setErr(''); setResolvedName('');
     try {
       const { ok, json } = await postJson('/api/onboard/flutterwave', {
-        action: 'resolve', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode,
+        action: 'resolve', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode, token,
       });
       if (!ok) { setErr(json.error || 'Could not check that account. Check the number and bank code.'); return; }
       setResolvedName(json.account_name);
@@ -69,7 +71,7 @@ export default function AcceptPage() {
     setBusy(true); setErr('');
     try {
       const { ok, json } = await postJson('/api/onboard/flutterwave', {
-        action: 'create', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode, business_name: resolvedName,
+        action: 'create', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode, business_name: resolvedName, token,
       });
       if (!ok) { setErr(json.error || 'Could not save that account. Please try again.'); return; }
       setDone(true); await load();
@@ -80,7 +82,7 @@ export default function AcceptPage() {
   async function startStripe() {
     setBusy(true); setErr('');
     try {
-      const res = await fetch(`/api/onboard/stripe?creator=${data.creator.id}`, { cache: 'no-store' });
+      const res = await fetch(`/api/onboard/stripe?creator=${data.creator.id}&token=${token}`, { cache: 'no-store' });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.url) { setErr(json.error || 'Could not start Stripe setup.'); return; }
       window.location.href = json.url;
@@ -95,7 +97,8 @@ export default function AcceptPage() {
   const feePct = Number(deal.platform_fee_percent || 0);
   const feeMinor = computePlatformFee(deal.total_amount_minor, feePct, deal.platform_fee_cap_minor);
   const distributable = deal.total_amount_minor - feeMinor;
-  const myShareMinor = Math.round(distributable * (split.percent / 100));
+  const allAmounts = allocate(distributable, all.map((s, i) => ({ id: s.creator_email, percent: s.percent })));
+  const myShareMinor = allAmounts[split.creator_email] || 0;
   const accepted = !!split.agreed_at;
   const onboarded = data.onboarded || done;
 

@@ -39,8 +39,9 @@ export async function POST(req) {
 
     // Brand paid -> push transfers to each collaborator.
     if (event.type === 'checkout.session.completed') {
-      const dealId = event.data.object.metadata?.deal_id;
-      if (dealId) {
+      const session = event.data.object;
+      const dealId = session.metadata?.deal_id;
+      if (dealId && session.payment_status === 'paid') {
         const { data: deal } = await db.from('deals').select('*').eq('id', dealId).single();
         if (deal && deal.status !== 'distributed' && deal.status !== 'cancelled') {
           await db.from('transactions').insert({
@@ -63,10 +64,12 @@ export async function POST(req) {
           let allPaid = true;
           for (const r of results) {
             if (r.status === 'paid') {
-              await db.from('deal_splits').update({ transfer_id: r.transfer_id, transfer_status: 'paid' }).eq('id', r.split_id);
               const split = enriched.find((s) => s.id === r.split_id);
-              await db.from('transactions').insert({ deal_id: dealId, kind: 'transfer_sent', amount_minor: split?.amount_minor, provider_ref: r.transfer_id });
-              if (split) await sendCollaboratorPaidEmail(deal, { email: split.creator_email, amount_minor: split.amount_minor });
+              if (split?.transfer_status !== 'paid') {
+                await db.from('deal_splits').update({ transfer_id: r.transfer_id, transfer_status: 'paid' }).eq('id', r.split_id);
+                await db.from('transactions').insert({ deal_id: dealId, kind: 'transfer_sent', amount_minor: split?.amount_minor, provider_ref: r.transfer_id });
+                if (split) await sendCollaboratorPaidEmail(deal, { email: split.creator_email, amount_minor: split.amount_minor });
+              }
             } else {
               allPaid = false;
             }

@@ -2,12 +2,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { toMajor } from '../../../lib/money';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 
 function money(minor, ccy) {
-  try { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: (ccy || 'gbp').toUpperCase() }).format(minor / 100); }
-  catch { return `${(minor / 100).toFixed(2)} ${(ccy || '').toUpperCase()}`; }
+  const major = toMajor(minor, ccy);
+  try { return new Intl.NumberFormat('en-GB', { style: 'currency', currency: (ccy || 'gbp').toUpperCase() }).format(major); }
+  catch { return `${major.toFixed(2)} ${(ccy || '').toUpperCase()}`; }
 }
 
 export default function DealPage() {

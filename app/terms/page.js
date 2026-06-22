@@ -7,7 +7,7 @@ export default function Terms() {
     <div className="wrap">
       <div className="brand"><Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link></div>
       <h1 className="hero display" style={{ fontSize: 30 }}>Terms of Service</h1>
-      <p className="muted" style={{ fontSize: 13 }}>Last updated: [DATE]. This is a starting template — have it reviewed by a solicitor before relying on it.</p>
+      <p className="muted" style={{ fontSize: 13 }}>Last updated: 22 June 2026. This is a starting template — have it reviewed by a solicitor before relying on it.</p>
 
       <div className="card">
         <p><strong>1. Who we are.</strong> Cowrie is operated by The 36th Company Ltd ("Cowrie", "we", "us"), a company registered in England and Wales. By using Cowrie you agree to these terms.</p>
@@ -28,7 +28,7 @@ export default function Terms() {
 
         <p><strong>9. Changes.</strong> We may update these terms; material changes will be notified in the app or by email.</p>
 
-        <p><strong>10. Contact.</strong> [your support email].</p>
+        <p><strong>10. Contact.</strong> support@cowrie.app.</p>
       </div>
 
       <p className="muted" style={{ fontSize: 13 }}><Link href="/privacy">Privacy Policy</Link> · <Link href="/">Home</Link></p>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../lib/supabase';
-import { railForCurrency } from '../../../lib/money';
+import { railForCurrency, toMinor } from '../../../lib/money';
 import { platformFee } from '../../../lib/platform-fee';
 import { sendEmail } from '../../../lib/email';
 
@@ -54,7 +54,12 @@ export async function POST(req) {
     return NextResponse.json({ error: `Splits must total 100%. They total ${sumPercent}%.` }, { status: 400 });
   }
 
-  const total_amount_minor = Math.round(parseFloat(total) * 100);
+  const emails = splits.map((s) => (s.email || '').toLowerCase());
+  if (new Set(emails).size !== emails.length) {
+    return NextResponse.json({ error: 'Each collaborator email must be unique within a deal.' }, { status: 400 });
+  }
+
+  const total_amount_minor = toMinor(total, currency);
   const { percent: feePct, capMinor: feeCapMinor } = platformFee(currency);
 
   const db = serverClient();
