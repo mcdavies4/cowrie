@@ -61,7 +61,7 @@ export default function Home() {
         Pounds, dollars and euros run on Stripe. Naira, cedis and other African currencies run on Flutterwave.
       </p>
       <p className="muted" style={{ fontSize: 13 }}>
-        <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link> · A product of The 36th Company Ltd
+        <Link href="/terms">Terms</Link> · <Link href="/privacy">Privacy</Link> · A product of The 36th Solutions Ltd
       </p>
     </div>
   );

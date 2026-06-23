@@ -10,7 +10,7 @@ export default function Terms() {
       <p className="muted" style={{ fontSize: 13 }}>Last updated: 23 June 2026. This is a starting template — have it reviewed by a solicitor before relying on it.</p>
 
       <div className="card">
-        <p><strong>1. Who we are.</strong> Cowrie is operated by The 36th Company Ltd ("Cowrie", "we", "us"), a company registered in England and Wales. By using Cowrie you agree to these terms.</p>
+        <p><strong>1. Who we are.</strong> Cowrie is operated by The 36th Solutions Ltd ("Cowrie", "we", "us"), a company registered in Nigeria. By using Cowrie you agree to these terms.</p>
 
         <p><strong>2. What Cowrie does.</strong> Cowrie helps collaborators agree how to split the revenue from a piece of work, and routes a payment from a paying party to each collaborator according to that agreement. Cowrie is a technology platform, not a bank, and is not a party to the underlying agreement between collaborators or with the paying party.</p>
 

@@ -7,7 +7,7 @@ export default function Privacy() {
     <div className="wrap">
       <div className="brand"><Link href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'inherit' }}><span className="dot" /><b>Cowrie</b></Link></div>
       <h1 className="hero display" style={{ fontSize: 30 }}>Privacy Policy</h1>
-      <p className="muted" style={{ fontSize: 13 }}>Last updated: 23 June 2026. This is a starting template — have it reviewed before relying on it. The 36th Company Ltd is the data controller.</p>
+      <p className="muted" style={{ fontSize: 13 }}>Last updated: 23 June 2026. This is a starting template — have it reviewed before relying on it. The 36th Solutions Ltd is the data controller.</p>
 
       <div className="card">
         <p><strong>What we collect.</strong> Account email addresses; deal details (titles, amounts, splits); collaborator email addresses and payout identifiers. Bank and identity details for payouts are collected and held by our payment providers (Stripe, Flutterwave), not by Cowrie.</p>
@@ -20,7 +20,7 @@ export default function Privacy() {
 
         <p><strong>How long we keep it.</strong> For as long as needed to provide the service and meet legal/accounting obligations, then we delete or anonymise it.</p>
 
-        <p><strong>Your rights.</strong> Under UK GDPR you can request access to, correction of, or deletion of your personal data, and object to certain processing. Contact us to exercise these rights. You can also complain to the ICO (ico.org.uk).</p>
+        <p><strong>Your rights.</strong> You can request access to, correction of, or deletion of your personal data, and object to certain processing. Contact us to exercise these rights. Depending on where you are, your data protection rights may arise under the Nigeria Data Protection Act 2023 (regulated by the Nigeria Data Protection Commission) and, for users in the UK, UK GDPR (regulated by the ICO, ico.org.uk). You can complain to the relevant regulator.</p>
 
         <p><strong>Security.</strong> We use access controls and encryption in transit, and rely on our providers&apos; security for sensitive payment data. No system is perfectly secure.</p>
 
