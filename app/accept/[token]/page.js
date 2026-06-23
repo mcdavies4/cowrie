@@ -20,6 +20,7 @@ export default function AcceptPage() {
   // FLW bank form state
   const [acctNo, setAcctNo] = useState('');
   const [bankCode, setBankCode] = useState('');
+  const [banks, setBanks] = useState([]);
   const [resolvedName, setResolvedName] = useState('');
   const [done, setDone] = useState(false);
 
@@ -42,6 +43,17 @@ export default function AcceptPage() {
     } catch { setErr('Network error loading the deal. Please refresh.'); }
   }
   useEffect(() => { load(); }, [token]);
+
+  // Load the bank list for Flutterwave deals so collaborators pick by name, not code.
+  useEffect(() => {
+    if (data?.deal?.rail === 'flutterwave' && banks.length === 0) {
+      fetch('/api/banks?country=NG', { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((j) => { if (j.banks) setBanks(j.banks); })
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.deal?.rail]);
 
   async function accept() {
     setBusy(true); setErr('');
@@ -150,8 +162,11 @@ export default function AcceptPage() {
               <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>Enter your bank account. We&apos;ll check the name before saving.</p>
               <label className="label">Account number</label>
               <input className="mono" value={acctNo} onChange={(e) => setAcctNo(e.target.value)} placeholder="0690000037" inputMode="numeric" />
-              <label className="label">Bank code</label>
-              <input className="mono" value={bankCode} onChange={(e) => setBankCode(e.target.value)} placeholder="044 (Access Bank)" />
+              <label className="label">Bank</label>
+              <select value={bankCode} onChange={(e) => setBankCode(e.target.value)}>
+                <option value="">{banks.length ? 'Select your bank…' : 'Loading banks…'}</option>
+                {banks.map((b) => <option key={`${b.code}-${b.name}`} value={b.code}>{b.name}</option>)}
+              </select>
               {!resolvedName
                 ? <button className="btn block" style={{ marginTop: 14 }} onClick={resolveBank} disabled={busy || !acctNo || !bankCode}>{busy ? 'Checking…' : 'Check account name'}</button>
                 : (
