@@ -21,6 +21,8 @@ export default function AcceptPage() {
   const [acctNo, setAcctNo] = useState('');
   const [bankCode, setBankCode] = useState('');
   const [banks, setBanks] = useState([]);
+  const [bankQuery, setBankQuery] = useState('');
+  const [bankOpen, setBankOpen] = useState(false);
   const [resolvedName, setResolvedName] = useState('');
   const [done, setDone] = useState(false);
 
@@ -163,10 +165,35 @@ export default function AcceptPage() {
               <label className="label">Account number</label>
               <input className="mono" value={acctNo} onChange={(e) => setAcctNo(e.target.value)} placeholder="0690000037" inputMode="numeric" />
               <label className="label">Bank</label>
-              <select value={bankCode} onChange={(e) => setBankCode(e.target.value)}>
-                <option value="">{banks.length ? 'Select your bank…' : 'Loading banks…'}</option>
-                {banks.map((b) => <option key={`${b.code}-${b.name}`} value={b.code}>{b.name}</option>)}
-              </select>
+              <div className="combo">
+                <input
+                  value={bankQuery}
+                  onChange={(e) => { setBankQuery(e.target.value); setBankOpen(true); setBankCode(''); }}
+                  onFocus={() => setBankOpen(true)}
+                  placeholder={banks.length ? 'Type your bank name…' : 'Loading banks…'}
+                  autoComplete="off"
+                />
+                {bankOpen && banks.length > 0 && (
+                  <div className="combo-list">
+                    {banks
+                      .filter((b) => b.name.toLowerCase().includes(bankQuery.trim().toLowerCase()))
+                      .slice(0, 40)
+                      .map((b) => (
+                        <button
+                          type="button"
+                          key={`${b.code}-${b.name}`}
+                          className="combo-item"
+                          onClick={() => { setBankCode(b.code); setBankQuery(b.name); setBankOpen(false); }}
+                        >
+                          {b.name}
+                        </button>
+                      ))}
+                    {banks.filter((b) => b.name.toLowerCase().includes(bankQuery.trim().toLowerCase())).length === 0 && (
+                      <div className="combo-empty">No bank matches “{bankQuery}”.</div>
+                    )}
+                  </div>
+                )}
+              </div>
               {!resolvedName
                 ? <button className="btn block" style={{ marginTop: 14 }} onClick={resolveBank} disabled={busy || !acctNo || !bankCode}>{busy ? 'Checking…' : 'Check account name'}</button>
                 : (

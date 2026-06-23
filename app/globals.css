@@ -48,6 +48,21 @@ input, select {
 }
 input:focus, select:focus { outline: 2px solid var(--jade); outline-offset: 1px; border-color: transparent; }
 
+.combo { position: relative; }
+.combo-list {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20;
+  max-height: 240px; overflow-y: auto;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+}
+.combo-item {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  background: transparent; border: 0; color: var(--text);
+  padding: 11px 12px; font-size: 15px; font-family: inherit;
+}
+.combo-item:hover, .combo-item:focus { background: var(--line); outline: none; }
+.combo-empty { padding: 11px 12px; color: var(--muted); font-size: 14px; }
+
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   background: var(--jade); color: #06231c; border: none; border-radius: 10px;
