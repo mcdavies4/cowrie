@@ -34,18 +34,30 @@ export async function POST(req, { params }) {
     );
   }
 
+  const isMomo = deal.payout_kind === 'momo';
+
   // 2) Pull each collaborator's payout destination for THIS deal's rail.
   const enriched = [];
   for (const s of splits) {
     const { data: creator } = await db.from('creators').select('*').eq('email', s.creator_email).single();
-    const p = payoutFor(creator, deal.rail);
-    if (!p.onboarded || !p.accountId) {
-      return NextResponse.json(
-        { error: `${s.creator_email} hasn't set up a ${deal.rail === 'stripe' ? 'Stripe' : 'bank'} payout for this currency yet.` },
-        { status: 409 }
-      );
+    if (isMomo) {
+      if (!creator?.flw_onboarded || !creator?.momo_phone || !creator?.momo_network) {
+        return NextResponse.json(
+          { error: `${s.creator_email} hasn't set up a mobile money payout yet.` },
+          { status: 409 }
+        );
+      }
+      enriched.push({ ...s, momo_phone: creator.momo_phone, momo_network: creator.momo_network, beneficiary_name: creator.name || creator.email });
+    } else {
+      const p = payoutFor(creator, deal.rail);
+      if (!p.onboarded || !p.accountId) {
+        return NextResponse.json(
+          { error: `${s.creator_email} hasn't set up a ${deal.rail === 'stripe' ? 'Stripe' : 'bank'} payout for this currency yet.` },
+          { status: 409 }
+        );
+      }
+      enriched.push({ ...s, provider_account_id: p.accountId });
     }
-    enriched.push({ ...s, provider_account_id: p.accountId });
   }
 
   // 3) Freeze exact amounts. The platform fee comes off the top; collaborators split
@@ -64,7 +76,9 @@ export async function POST(req, { params }) {
   const provider = getProvider(deal.rail);
   let collection;
   try {
-    collection = await provider.createCollection(deal, enriched);
+    collection = isMomo
+      ? await provider.createCollectionNoSplit(deal)   // collect to balance, pay out later
+      : await provider.createCollection(deal, enriched); // bank: split at charge
   } catch (e) {
     return NextResponse.json({ error: `Could not create payment link: ${e.message}` }, { status: 502 });
   }

@@ -5,17 +5,9 @@ import Link from 'next/link';
 import { railForCurrency } from '../../../lib/money';
 import { computePlatformFee } from '../../../lib/fees';
 import { platformFee } from '../../../lib/platform-fee';
+import { CURRENCIES } from '../../../lib/currencies';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
-const CURRENCIES = [
-  { code: 'gbp', label: 'GBP £ (Stripe)' },
-  { code: 'usd', label: 'USD $ (Stripe)' },
-  { code: 'eur', label: 'EUR € (Stripe)' },
-  { code: 'ngn', label: 'NGN ₦ (Flutterwave)' },
-  { code: 'ghs', label: 'GHS ₵ (Flutterwave)' },
-  { code: 'kes', label: 'KES (Flutterwave)' },
-];
-
 export default function NewDeal() {
   const router = useRouter();
   const [title, setTitle] = useState('');

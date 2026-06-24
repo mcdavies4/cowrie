@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../lib/supabase';
 import { railForCurrency } from '../../../lib/money';
 import { platformFee } from '../../../lib/platform-fee';
+import { payoutKindForCurrency } from '../../../lib/currencies';
 import { sendEmail } from '../../../lib/email';
 
 export const runtime = 'nodejs';
@@ -69,6 +70,7 @@ export async function POST(req) {
       total_amount_minor,
       platform_fee_percent: feePct,
       platform_fee_cap_minor: feeCapMinor,
+      payout_kind: payoutKindForCurrency(currency),
       created_by_email: user.email,
     })
     .select()

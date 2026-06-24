@@ -18,6 +18,18 @@ export default function DealPage() {
   const [checking, setChecking] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [releasing, setReleasing] = useState(false);
+
+  async function releaseMomo() {
+    setReleasing(true); setErr('');
+    try {
+      const res = await fetch(`/api/deals/${id}/release-momo`, { method: 'POST', cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (json.ok) { await load(); }
+      else { setErr(json.error || 'Could not release payouts yet. If the brand just paid, the balance may still be settling — try again shortly.'); }
+    } catch { setErr('Network error releasing payouts.'); }
+    finally { setReleasing(false); }
+  }
   const [cancelling, setCancelling] = useState(false);
   const [payUrl, setPayUrl] = useState('');
 
@@ -214,6 +226,27 @@ export default function DealPage() {
               {retrying ? 'Retrying…' : 'Retry distribution'}
             </button>
           )}
+          {deal.status === 'paid' && deal.payout_kind === 'momo' && (() => {
+            const needsRelease = splits.some((s) => s.transfer_status !== 'queued' && s.transfer_status !== 'paid');
+            const anyQueued = splits.some((s) => s.transfer_status === 'queued');
+            const anyFailed = splits.some((s) => s.transfer_status === 'failed');
+            if (needsRelease) {
+              return (
+                <button className="btn block" style={{ marginTop: 10 }} onClick={releaseMomo} disabled={releasing}>
+                  {releasing ? 'Sending payouts…' : anyFailed ? 'Retry failed payouts' : 'Release mobile money payouts'}
+                </button>
+              );
+            }
+            if (anyQueued) {
+              return (
+                <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
+                  Payouts sent to Flutterwave — confirming. Each share shows as paid once the transfer completes.
+                  <button className="btn ghost block" style={{ marginTop: 8 }} onClick={load}>Refresh status</button>
+                </p>
+              );
+            }
+            return null;
+          })()}
         </div>
       )}
 

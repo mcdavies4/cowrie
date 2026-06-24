@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { computePlatformFee } from '../../../lib/fees';
+import { countryForCurrency, payoutKindForCurrency } from '../../../lib/currencies';
+import { networksForCountry, DIAL_CODE } from '../../../lib/momo';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 
@@ -23,6 +25,8 @@ export default function AcceptPage() {
   const [banks, setBanks] = useState([]);
   const [bankQuery, setBankQuery] = useState('');
   const [bankOpen, setBankOpen] = useState(false);
+  const [momoPhone, setMomoPhone] = useState('');
+  const [momoNetwork, setMomoNetwork] = useState('');
   const [resolvedName, setResolvedName] = useState('');
   const [done, setDone] = useState(false);
 
@@ -49,7 +53,8 @@ export default function AcceptPage() {
   // Load the bank list for Flutterwave deals so collaborators pick by name, not code.
   useEffect(() => {
     if (data?.deal?.rail === 'flutterwave' && banks.length === 0) {
-      fetch('/api/banks?country=NG', { cache: 'no-store' })
+      const country = countryForCurrency(data.deal.currency);
+      fetch(`/api/banks?country=${country}`, { cache: 'no-store' })
         .then((r) => r.json())
         .then((j) => { if (j.banks) setBanks(j.banks); })
         .catch(() => {});
@@ -86,6 +91,22 @@ export default function AcceptPage() {
         action: 'create', creator_id: data.creator.id, account_number: acctNo, account_bank: bankCode, business_name: resolvedName,
       });
       if (!ok) { setErr(json.error || 'Could not save that account. Please try again.'); return; }
+      setDone(true); await load();
+    } catch { setErr('Network error. Please try again.'); }
+    finally { setBusy(false); }
+  }
+
+  async function saveMomo() {
+    setBusy(true); setErr('');
+    try {
+      const cc = countryForCurrency(deal.currency);
+      const dial = DIAL_CODE[cc] || '';
+      let phone = momoPhone.replace(/\s+/g, '');
+      if (phone.startsWith('0')) phone = dial + phone.slice(1); // local 07.. -> 2547..
+      const { ok, json } = await postJson('/api/onboard/flutterwave', {
+        action: 'momo', creator_id: data.creator.id, momo_phone: phone, momo_network: momoNetwork,
+      });
+      if (!ok) { setErr(json.error || 'Could not save your mobile money details. Please try again.'); return; }
       setDone(true); await load();
     } catch { setErr('Network error. Please try again.'); }
     finally { setBusy(false); }
@@ -158,6 +179,23 @@ export default function AcceptPage() {
             <>
               <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>You&apos;ll verify your identity and add a bank account with Stripe. Takes a couple of minutes.</p>
               <button className="btn block" onClick={startStripe} disabled={busy}>{busy ? 'Starting…' : 'Set up payout with Stripe'}</button>
+            </>
+          ) : payoutKindForCurrency(deal.currency) === 'momo' ? (
+            <>
+              <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>Enter the mobile money wallet where your share should land.</p>
+              <label className="label">Network</label>
+              <select value={momoNetwork} onChange={(e) => setMomoNetwork(e.target.value)}>
+                <option value="">Select your network…</option>
+                {networksForCountry(countryForCurrency(deal.currency)).map((n) => (
+                  <option key={n.value} value={n.value}>{n.label}</option>
+                ))}
+              </select>
+              <label className="label">Mobile money number</label>
+              <input className="mono" value={momoPhone} onChange={(e) => setMomoPhone(e.target.value)} placeholder="0700000000" inputMode="tel" />
+              <button className="btn block" style={{ marginTop: 14 }} onClick={saveMomo} disabled={busy || !momoPhone || !momoNetwork}>
+                {busy ? 'Saving…' : 'Save mobile money'}
+              </button>
+              <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>Double-check the number — payouts go to exactly what you enter.</p>
             </>
           ) : (
             <>
