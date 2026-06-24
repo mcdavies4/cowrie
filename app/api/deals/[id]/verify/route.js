@@ -75,6 +75,16 @@ export async function POST(req, { params }) {
     return NextResponse.json({ ok: false, status: deal.status, detail: d?.status || json?.message || 'not confirmed' });
   }
 
+  // Bank deals split at charge -> fully settled. Mobile-money deals only COLLECT here;
+  // payouts are pushed later via "Release", so we just mark them paid, never distributed.
+  if (deal.payout_kind === 'momo') {
+    if (deal.status !== 'distributed' && deal.status !== 'cancelled' && deal.status !== 'paid') {
+      await db.from('transactions').insert({ deal_id: deal.id, kind: 'payment_received', amount_minor: deal.total_amount_minor, provider_ref: d?.tx_ref || String(transaction_id) });
+      await db.from('deals').update({ status: 'paid' }).eq('id', deal.id);
+    }
+    return NextResponse.json({ ok: true, status: 'paid' });
+  }
+
   await settleFlutterwaveDeal(db, deal, d?.tx_ref || String(transaction_id));
   return NextResponse.json({ ok: true, status: 'distributed' });
 }

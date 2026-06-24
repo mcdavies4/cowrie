@@ -51,9 +51,9 @@ export default function AcceptPage() {
   }
   useEffect(() => { load(); }, [token]);
 
-  // Load the bank list for Flutterwave deals so collaborators pick by name, not code.
+  // Load the bank list for bank-payout Flutterwave deals (not mobile money).
   useEffect(() => {
-    if (data?.deal?.rail === 'flutterwave' && banks.length === 0) {
+    if (data?.deal?.rail === 'flutterwave' && payoutKindForCurrency(data.deal.currency) !== 'momo' && banks.length === 0) {
       const country = countryForCurrency(data.deal.currency);
       fetch(`/api/banks?country=${country}`, { cache: 'no-store' })
         .then((r) => r.json())

@@ -183,7 +183,7 @@ export default function DealPage() {
           <h2 className="display" style={{ fontSize: 18 }}>Money breakdown</h2>
           <div className="legend" style={{ marginTop: 12 }}>
             <div className="item"><span className="who">Brand pays (gross)</span><span className="amt mono">{money(data.breakdown.gross, deal.currency)}</span></div>
-            <div className="item"><span className="who muted">Est. {deal.rail === 'stripe' ? 'Stripe' : 'Flutterwave'} fee</span><span className="amt mono muted">−{money(data.breakdown.processor_minor, deal.currency)}</span></div>
+            <div className="item"><span className="who muted">Est. {deal.rail === 'stripe' ? 'Stripe' : deal.rail === 'paypal' ? 'PayPal' : 'Flutterwave'} fee</span><span className="amt mono muted">−{money(data.breakdown.processor_minor, deal.currency)}</span></div>
             <div className="item"><span className="who">Cowrie fee</span><span className="amt mono">{money(data.breakdown.platform_fee_minor, deal.currency)}</span></div>
             <div className="item" style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}>
               <span className="who" style={{ color: data.breakdown.you_keep_minor >= 0 ? 'var(--jade)' : 'var(--danger)' }}>
@@ -225,7 +225,11 @@ export default function DealPage() {
       {(payUrl || deal.status === 'locked' || deal.status === 'paid') && deal.status !== 'distributed' && (
         <div className="card">
           <h2 className="display">Send this to the brand</h2>
-          <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>When they pay, each share settles automatically. Already paid? Check the status below.</p>
+          <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>
+            {deal.payout_kind === 'momo' || deal.rail === 'paypal'
+              ? 'When they pay, the money is collected — then you release the payouts to everyone below.'
+              : 'When they pay, each share settles to everyone automatically.'} Already paid? Check the status below.
+          </p>
           {payUrl
             ? <a className="btn gold block" href={payUrl} target="_blank" rel="noreferrer">Open payment link</a>
             : <p className="muted" style={{ fontSize: 13 }}>Reload to fetch the link, or re-lock if it didn&apos;t generate.</p>}
