@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { serverClient } from '../../../../../lib/supabase';
 import { settleFlutterwaveDeal } from '../../../../../lib/settle';
+import { getProvider } from '../../../../../lib/providers';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -16,6 +17,30 @@ export async function POST(req, { params }) {
   const { data: deal } = await db.from('deals').select('*').eq('id', params.id).single();
   if (!deal) return NextResponse.json({ error: 'Deal not found.' }, { status: 404 });
   if (deal.status === 'distributed') return NextResponse.json({ ok: true, status: 'distributed' });
+
+  // PayPal: check the order; capture it if the brand approved but the redirect didn't land.
+  if (deal.rail === 'paypal') {
+    if (!deal.collection_ref) return NextResponse.json({ ok: false, status: deal.status, error: 'No order to check yet.' }, { status: 400 });
+    try {
+      const paypal = getProvider('paypal');
+      const order = await paypal.getOrder(deal.collection_ref);
+      let status = order?.status;
+      if (status === 'APPROVED') {
+        const cap = await paypal.captureOrder(deal.collection_ref);
+        status = cap.status;
+      }
+      if (status === 'COMPLETED') {
+        if (deal.status !== 'paid' && deal.status !== 'cancelled') {
+          await db.from('transactions').insert({ deal_id: deal.id, kind: 'payment_received', amount_minor: deal.total_amount_minor, provider_ref: deal.collection_ref });
+          await db.from('deals').update({ status: 'paid' }).eq('id', deal.id);
+        }
+        return NextResponse.json({ ok: true, status: 'paid' });
+      }
+      return NextResponse.json({ ok: false, status: deal.status, detail: status || 'not approved yet' });
+    } catch (e) {
+      return NextResponse.json({ ok: false, error: `Could not check PayPal: ${e.message}` }, { status: 502 });
+    }
+  }
 
   if (deal.rail !== 'flutterwave') {
     return NextResponse.json({ ok: false, status: deal.status, note: 'Stripe deals confirm via their webhook.' });
