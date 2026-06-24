@@ -45,7 +45,9 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
   }
 
-  const rail = railForCurrency(currency);
+  const rail = body.rail === 'paypal' && railForCurrency(currency) === 'stripe'
+    ? 'paypal'
+    : railForCurrency(currency);
   if (!rail) {
     return NextResponse.json({ error: `Currency ${currency} is not supported on either rail yet.` }, { status: 400 });
   }
@@ -70,7 +72,7 @@ export async function POST(req) {
       total_amount_minor,
       platform_fee_percent: feePct,
       platform_fee_cap_minor: feeCapMinor,
-      payout_kind: payoutKindForCurrency(currency),
+      payout_kind: rail === 'paypal' ? 'paypal' : payoutKindForCurrency(currency),
       created_by_email: user.email,
     })
     .select()

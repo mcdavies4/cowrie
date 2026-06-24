@@ -30,6 +30,17 @@ export default function DealPage() {
     } catch { setErr('Network error releasing payouts.'); }
     finally { setReleasing(false); }
   }
+
+  async function releasePaypal() {
+    setReleasing(true); setErr('');
+    try {
+      const res = await fetch(`/api/deals/${id}/release-paypal`, { method: 'POST', cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (json.ok) { await load(); }
+      else { setErr(json.error || 'Could not release payouts yet. Try again shortly.'); }
+    } catch { setErr('Network error releasing payouts.'); }
+    finally { setReleasing(false); }
+  }
   const [cancelling, setCancelling] = useState(false);
   const [payUrl, setPayUrl] = useState('');
 
@@ -132,7 +143,7 @@ export default function DealPage() {
         <Link href="/deals" className="muted" style={{ fontSize: 14 }}>← All deals</Link>
       </div>
 
-      <p className="eyebrow">{deal.rail === 'stripe' ? 'Stripe rail' : 'Flutterwave rail'} · {deal.currency.toUpperCase()}</p>
+      <p className="eyebrow">{deal.rail === 'stripe' ? 'Stripe rail' : deal.rail === 'paypal' ? 'PayPal rail' : 'Flutterwave rail'} · {deal.currency.toUpperCase()}</p>
       <h1 className="hero display" style={{ fontSize: 30 }}>{deal.title}</h1>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
         <span className="total">{money(total, deal.currency)}</span>
@@ -226,6 +237,27 @@ export default function DealPage() {
               {retrying ? 'Retrying…' : 'Retry distribution'}
             </button>
           )}
+          {deal.status === 'paid' && deal.rail === 'paypal' && (() => {
+            const needsRelease = splits.some((s) => s.transfer_status !== 'queued' && s.transfer_status !== 'paid');
+            const anyQueued = splits.some((s) => s.transfer_status === 'queued');
+            const anyFailed = splits.some((s) => s.transfer_status === 'failed');
+            if (needsRelease) {
+              return (
+                <button className="btn block" style={{ marginTop: 10 }} onClick={releasePaypal} disabled={releasing}>
+                  {releasing ? 'Sending payouts…' : anyFailed ? 'Retry failed payouts' : 'Release PayPal payouts'}
+                </button>
+              );
+            }
+            if (anyQueued) {
+              return (
+                <p className="muted" style={{ fontSize: 13, marginTop: 10 }}>
+                  Payouts sent to PayPal — confirming. Each share shows as paid once PayPal completes it.
+                  <button className="btn ghost block" style={{ marginTop: 8 }} onClick={load}>Refresh status</button>
+                </p>
+              );
+            }
+            return null;
+          })()}
           {deal.status === 'paid' && deal.payout_kind === 'momo' && (() => {
             const needsRelease = splits.some((s) => s.transfer_status !== 'queued' && s.transfer_status !== 'paid');
             const anyQueued = splits.some((s) => s.transfer_status === 'queued');

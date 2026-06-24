@@ -27,6 +27,7 @@ export default function AcceptPage() {
   const [bankOpen, setBankOpen] = useState(false);
   const [momoPhone, setMomoPhone] = useState('');
   const [momoNetwork, setMomoNetwork] = useState('');
+  const [paypalEmail, setPaypalEmail] = useState('');
   const [resolvedName, setResolvedName] = useState('');
   const [done, setDone] = useState(false);
 
@@ -112,6 +113,18 @@ export default function AcceptPage() {
     finally { setBusy(false); }
   }
 
+  async function savePaypal() {
+    setBusy(true); setErr('');
+    try {
+      const { ok, json } = await postJson('/api/onboard/paypal', {
+        creator_id: data.creator.id, paypal_email: paypalEmail.trim(),
+      });
+      if (!ok) { setErr(json.error || 'Could not save your PayPal email. Please try again.'); return; }
+      setDone(true); await load();
+    } catch { setErr('Network error. Please try again.'); }
+    finally { setBusy(false); }
+  }
+
   async function startStripe() {
     setBusy(true); setErr('');
     try {
@@ -175,7 +188,16 @@ export default function AcceptPage() {
       {accepted && !onboarded && (
         <div className="card">
           <h2 className="display">Set up where your money lands</h2>
-          {deal.rail === 'stripe' ? (
+          {deal.rail === 'paypal' ? (
+            <>
+              <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>Enter the PayPal email where your share should land. If you don&apos;t have PayPal yet, you can claim the money once it arrives.</p>
+              <label className="label">PayPal email</label>
+              <input value={paypalEmail} onChange={(e) => setPaypalEmail(e.target.value)} placeholder="you@email.com" inputMode="email" autoComplete="off" />
+              <button className="btn block" style={{ marginTop: 14 }} onClick={savePaypal} disabled={busy || !paypalEmail.includes('@')}>
+                {busy ? 'Saving…' : 'Save PayPal email'}
+              </button>
+            </>
+          ) : deal.rail === 'stripe' ? (
             <>
               <p className="muted" style={{ fontSize: 14, marginTop: 0 }}>You&apos;ll verify your identity and add a bank account with Stripe. Takes a couple of minutes.</p>
               <button className="btn block" onClick={startStripe} disabled={busy}>{busy ? 'Starting…' : 'Set up payout with Stripe'}</button>

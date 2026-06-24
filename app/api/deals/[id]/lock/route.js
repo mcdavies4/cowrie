@@ -51,8 +51,9 @@ export async function POST(req, { params }) {
     } else {
       const p = payoutFor(creator, deal.rail);
       if (!p.onboarded || !p.accountId) {
+        const what = deal.rail === 'stripe' ? 'Stripe' : deal.rail === 'paypal' ? 'PayPal' : 'bank';
         return NextResponse.json(
-          { error: `${s.creator_email} hasn't set up a ${deal.rail === 'stripe' ? 'Stripe' : 'bank'} payout for this currency yet.` },
+          { error: `${s.creator_email} hasn't set up a ${what} payout yet.` },
           { status: 409 }
         );
       }
@@ -73,12 +74,15 @@ export async function POST(req, { params }) {
   }
 
   // 4) Create the brand-facing collection link on the right rail.
+  const isPaypal = deal.rail === 'paypal';
   const provider = getProvider(deal.rail);
   let collection;
   try {
     collection = isMomo
-      ? await provider.createCollectionNoSplit(deal)   // collect to balance, pay out later
-      : await provider.createCollection(deal, enriched); // bank: split at charge
+      ? await provider.createCollectionNoSplit(deal)   // FLW: collect to balance, pay out later
+      : isPaypal
+        ? await provider.createCollection(deal)        // PayPal: order, then payout later
+        : await provider.createCollection(deal, enriched); // stripe/flw-bank: split at charge
   } catch (e) {
     return NextResponse.json({ error: `Could not create payment link: ${e.message}` }, { status: 502 });
   }

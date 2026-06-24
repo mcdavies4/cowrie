@@ -13,6 +13,7 @@ export default function NewDeal() {
   const [title, setTitle] = useState('');
   const [brand, setBrand] = useState('');
   const [currency, setCurrency] = useState('gbp');
+  const [usePaypal, setUsePaypal] = useState(false);
   const [total, setTotal] = useState('');
   const [splits, setSplits] = useState([{ email: '', percent: '' }]);
   const [err, setErr] = useState('');
@@ -33,7 +34,7 @@ export default function NewDeal() {
     const res = await fetch('/api/deals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, brand_name: brand, currency, total, splits }),
+      body: JSON.stringify({ title, brand_name: brand, currency, total, splits, rail: usePaypal ? 'paypal' : undefined }),
     });
     const data = await res.json();
     setBusy(false);
@@ -67,6 +68,15 @@ export default function NewDeal() {
             <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
               {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
             </select>
+            {railForCurrency(currency) === 'stripe' && (
+              <>
+                <label className="label">Payout method</label>
+                <select value={usePaypal ? 'paypal' : 'stripe'} onChange={(e) => setUsePaypal(e.target.value === 'paypal')}>
+                  <option value="stripe">Stripe — collaborators set up a payout account</option>
+                  <option value="paypal">PayPal — collaborators just give their PayPal email</option>
+                </select>
+              </>
+            )}
           </div>
           <div>
             <label className="label">Total amount</label>
