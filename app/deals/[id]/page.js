@@ -43,6 +43,17 @@ export default function DealPage() {
   }
   const [cancelling, setCancelling] = useState(false);
   const [payUrl, setPayUrl] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  async function copyPayLink(link) {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setErr('Could not copy — long-press the link to copy it manually.');
+    }
+  }
 
   async function retryDistribution() {
     setRetrying(true); setErr('');
@@ -230,9 +241,20 @@ export default function DealPage() {
               ? 'When they pay, the money is collected — then you release the payouts to everyone below.'
               : 'When they pay, each share settles to everyone automatically.'} Already paid? Check the status below.
           </p>
-          {payUrl
-            ? <a className="btn gold block" href={payUrl} target="_blank" rel="noreferrer">Open payment link</a>
-            : <p className="muted" style={{ fontSize: 13 }}>Reload to fetch the link, or re-lock if it didn&apos;t generate.</p>}
+          {(() => {
+            const link = payUrl || deal.collection_url;
+            return link ? (
+              <>
+                <button className="btn gold block" onClick={() => copyPayLink(link)}>
+                  {copied ? '✓ Copied — paste it to the brand' : 'Copy payment link'}
+                </button>
+                <a className="btn ghost block" style={{ marginTop: 8 }} href={link} target="_blank" rel="noreferrer">Open it myself</a>
+                <p className="mono" style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8, wordBreak: 'break-all' }}>{link}</p>
+              </>
+            ) : (
+              <p className="muted" style={{ fontSize: 13 }}>Link not found — re-lock the deal to regenerate it.</p>
+            );
+          })()}
           <button className="btn ghost block" style={{ marginTop: 10 }} onClick={() => verifyPayment(false)} disabled={checking}>
             {checking ? 'Checking…' : 'Check payment status'}
           </button>

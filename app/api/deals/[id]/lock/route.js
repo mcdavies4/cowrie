@@ -87,7 +87,7 @@ export async function POST(req, { params }) {
     return NextResponse.json({ error: `Could not create payment link: ${e.message}` }, { status: 502 });
   }
 
-  await db.from('deals').update({ status: 'locked', locked_at: new Date().toISOString(), collection_ref: collection.ref, fee_minor }).eq('id', dealId);
+  await db.from('deals').update({ status: 'locked', locked_at: new Date().toISOString(), collection_ref: collection.ref, collection_url: collection.url, fee_minor }).eq('id', dealId);
 
   return NextResponse.json({ ok: true, pay_url: collection.url });
 }

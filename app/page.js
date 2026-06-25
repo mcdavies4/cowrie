@@ -15,7 +15,7 @@ export default function Home() {
       <h1 className="hero display">Split deals, not friendships.</h1>
       <p className="hero-sub">
         Agree the split up front. When the brand pays, everyone&apos;s share lands in their own account
-        automatically — your collaborator in Lagos gets paid in naira, instantly, no international wire.
+        automatically — your collaborator in Lagos gets paid in naira, straight to their own account, no international wire.
         No one has to trust the other to do the right thing.
       </p>
 
