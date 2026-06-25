@@ -73,8 +73,9 @@ export default function NewDeal() {
                 <label className="label">Payout method</label>
                 <select value={usePaypal ? 'paypal' : 'stripe'} onChange={(e) => setUsePaypal(e.target.value === 'paypal')}>
                   <option value="stripe">Stripe — collaborators set up a payout account</option>
-                  <option value="paypal">PayPal — collaborators just give their PayPal email</option>
+                  <option value="paypal" disabled>PayPal — coming soon</option>
                 </select>
+                <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>PayPal payouts are on the way — for now, card deals settle via Stripe.</p>
               </>
             )}
           </div>

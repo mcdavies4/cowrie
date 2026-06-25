@@ -43,7 +43,7 @@ export default function Home() {
       <p className="eyebrow">Why it&apos;s safe</p>
       <div className="card">
         <p style={{ marginTop: 0 }}><strong>Nobody can cheat the split.</strong> Once a deal is locked, the percentages are frozen — they can&apos;t be changed after anyone has accepted.</p>
-        <p><strong>Cowrie never holds your money.</strong> The payment goes straight to each person&apos;s account through regulated providers (Stripe and Flutterwave). We route it; we don&apos;t sit on it.</p>
+        <p><strong>Cowrie isn&apos;t a middleman sitting on your cash.</strong> Payments run through regulated providers — Stripe and Flutterwave — and each share settles to its owner&apos;s own account.</p>
         <p style={{ marginBottom: 0 }}><strong>Everyone gets paid at once.</strong> One payment in, every share out — automatically, in each person&apos;s own currency. No chasing, no "I&apos;ll send it next week."</p>
       </div>
 

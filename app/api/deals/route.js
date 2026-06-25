@@ -45,7 +45,11 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
   }
 
-  const rail = body.rail === 'paypal' && railForCurrency(currency) === 'stripe'
+  // PayPal payouts are built but not live yet (awaiting PayPal Payouts access).
+  // Flip this to true to enable PayPal as a payout method everywhere.
+  const PAYPAL_ENABLED = false;
+
+  const rail = PAYPAL_ENABLED && body.rail === 'paypal' && railForCurrency(currency) === 'stripe'
     ? 'paypal'
     : railForCurrency(currency);
   if (!rail) {
