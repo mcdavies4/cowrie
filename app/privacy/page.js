@@ -24,7 +24,7 @@ export default function Privacy() {
 
         <p><strong>Security.</strong> We use access controls and encryption in transit, and rely on our providers&apos; security for sensitive payment data. No system is perfectly secure.</p>
 
-        <p><strong>Contact.</strong> support@odogwu.online</p>
+        <p><strong>Contact.</strong> support@joinzeno.co.uk</p>
       </div>
 
       <p className="muted" style={{ fontSize: 13 }}><Link href="/terms">Terms of Service</Link> · <Link href="/">Home</Link></p>

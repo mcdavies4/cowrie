@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { railForCurrency } from '../../../lib/money';
 import { computePlatformFee } from '../../../lib/fees';
 import { platformFee } from '../../../lib/platform-fee';
-import { CURRENCIES } from '../../../lib/currencies';
+import { CURRENCIES, isComingSoon } from '../../../lib/currencies';
 
 const COLORS = ['var(--jade)', 'var(--gold)', 'var(--cream)', '#8b7fd6', '#e8765b'];
 export default function NewDeal() {
@@ -66,7 +66,10 @@ export default function NewDeal() {
           <div>
             <label className="label">Currency</label>
             <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
-              {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+              {CURRENCIES.map((c) => {
+                const soon = isComingSoon(c.code);
+                return <option key={c.code} value={c.code} disabled={soon}>{c.label}{soon ? ' — coming soon' : ''}</option>;
+              })}
             </select>
             {railForCurrency(currency) === 'stripe' && (
               <>

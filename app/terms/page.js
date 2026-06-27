@@ -28,7 +28,7 @@ export default function Terms() {
 
         <p><strong>9. Changes.</strong> We may update these terms; material changes will be notified in the app or by email.</p>
 
-        <p><strong>10. Contact.</strong> support@odogwu.online</p>
+        <p><strong>10. Contact.</strong> support@joinzeno.co.uk</p>
       </div>
 
       <p className="muted" style={{ fontSize: 13 }}><Link href="/privacy">Privacy Policy</Link> · <Link href="/">Home</Link></p>

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { serverClient, currentUser } from '../../../lib/supabase';
 import { railForCurrency } from '../../../lib/money';
 import { platformFee } from '../../../lib/platform-fee';
-import { payoutKindForCurrency } from '../../../lib/currencies';
+import { payoutKindForCurrency, isComingSoon } from '../../../lib/currencies';
 import { sendEmail } from '../../../lib/email';
 
 export const runtime = 'nodejs';
@@ -43,6 +43,10 @@ export async function POST(req) {
 
   if (!title || !currency || !total || !Array.isArray(splits) || splits.length === 0) {
     return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
+  }
+
+  if (isComingSoon(currency)) {
+    return NextResponse.json({ error: `${currency.toUpperCase()} payouts are coming soon — not available yet.` }, { status: 400 });
   }
 
   // PayPal payouts are built but not live yet (awaiting PayPal Payouts access).
